@@ -7,7 +7,7 @@
 
 #include <data_types.hpp>
 
-namespace block_manager {
+namespace lock_manager {
 
   using namespace std;
   using namespace data_types;
@@ -24,13 +24,13 @@ namespace block_manager {
 
   using PermissionQueue = deque<Permission>;
 
-  class BlockManager {
+  class LockManager {
   private:
     unordered_map<string, PermissionQueue> m_vars;
 
   public:
-    BlockManager() = default;
-    BlockManager(const BlockManager&) = delete;
+    LockManager() = default;
+    LockManager(const LockManager&) = delete;
 
     bool grant_shared(const string& var_name, int transaction_id) {
       PermissionQueue& deque = m_vars[var_name];

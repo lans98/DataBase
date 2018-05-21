@@ -1,14 +1,14 @@
 #include <iostream>
-#include <block_manager.hpp>
+#include <lock_manager.hpp>
 
 using namespace std;
-using namespace block_manager;
+using namespace lock_manager;
 
 int main() {
-  BlockManager bm;
-  bm.grant_shared("x", 1);
-  bm.grant_shared("x", 2);
-  bm.grant_exclusive("x", 1);
-  bm.pop_permission("x", 1);
-  bm.pop_permission("x", 2);
+  LockManager lm;
+  lm.grant_shared("x", 1);
+  lm.grant_shared("x", 2);
+  lm.grant_exclusive("x", 1);
+  lm.pop_permission("x", 1);
+  lm.pop_permission("x", 2);
 }
