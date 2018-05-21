@@ -1,5 +1,5 @@
-#ifndef SCPPDB_BLOCK_MANAGER_HPP
-#define SCPPDB_BLOCK_MANAGER_HPP
+#ifndef SCPPDB_LOCK_MANAGER_HPP
+#define SCPPDB_LOCK_MANAGER_HPP
 
 #include <deque>
 #include <iostream>
