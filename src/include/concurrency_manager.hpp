@@ -19,7 +19,7 @@ namespace concurrency_manager {
     unordered_map<string, DataType> m_vars;
 
   public:
-    
+        
 
   };
 

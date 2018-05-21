@@ -17,10 +17,8 @@ namespace block_manager {
     };
 
     Type type;
-    bool granted = false; // awaiting
-
-    // temporal
-    int transaction_id;
+    bool granted;
+    int  transaction_id;
   };
 
   using PermissionQueue = deque<Permission>;
@@ -35,6 +33,7 @@ namespace block_manager {
 
     bool grant_shared(string var_name, int transaction_id) {
       PermissionQueue& deque = m_vars[var_name];
+
       if (deque.empty()) {
         deque.push_back(Permission{
           .type = Permission::SHARED,
@@ -45,18 +44,44 @@ namespace block_manager {
         return true;
       }
 
-      {
-        Permission& permission = deque[0];
-        if (permission.type == Permission::EXCLUSIVE && permission.granted)
-          return false;
-      }
+      Permission permission;
 
+      permission = deque[0];
+      if (permission.type == Permission::EXCLUSIVE && permission.granted)
+        return false;
+
+      permission = deque.back();
+      bool grant_value = permission.type == Permission::SHARED && permission.granted;
+      deque.push_back(Permission{
+        .type = Permission::SHARED,
+        .granted = grant_value,
+        .transaction_id = transaction_id
+      });
+
+      return true;
     }
 
     bool grant_exclusive(string var_name, int transaction_id) {
+      PermissionQueue& deque = m_vars[var_name];
 
+      if (deque.empty()) {
+        deque.push_back(Permission{
+          .type = Permission::EXCLUSIVE,
+          .granted = true,
+          .transaction_id = transaction_id
+        });
+
+        return true;
+      }
+
+      deque.push_back(Permission{
+        .type = Permission::EXCLUSIVE,
+        .granted = false,
+        .transaction_id = transaction_id
+      });
+
+      return true;
     }
-
   };
 
 }

@@ -7,13 +7,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include_directories(src/include)
 
 # Source
-set(
-  SOURCES 
-  main.cpp
-)
+set(SOURCES src/main.cpp)
 
+# Executables
 add_executable(scppdb ${SOURCES})
 
-# Tests 
-add_executable(dummy test/dummy_test.cpp)
-add_test(dummy_test dummy)
+# Executables test
+add_executable(block_manager test/block_manager.cpp)
