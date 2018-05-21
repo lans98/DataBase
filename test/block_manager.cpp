@@ -9,4 +9,6 @@ int main() {
   bm.grant_shared("x", 1);
   bm.grant_shared("x", 2);
   bm.grant_exclusive("x", 1);
+  bm.pop_permission("x", 1);
+  bm.pop_permission("x", 2);
 }
