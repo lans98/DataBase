@@ -13,4 +13,4 @@ set(SOURCES src/main.cpp)
 add_executable(scppdb ${SOURCES})
 
 # Executables test
-add_executable(block_manager test/block_manager.cpp)
+add_executable(lock_manager test/lock_manager.cpp)
