@@ -2,6 +2,7 @@
 #define SCPPDB_BLOCK_MANAGER_HPP
 
 #include <deque>
+#include <iostream>
 #include <unordered_map>
 
 #include <data_types.hpp>
@@ -31,7 +32,7 @@ namespace block_manager {
     BlockManager() = default;
     BlockManager(const BlockManager&) = delete;
 
-    bool grant_shared(string var_name, int transaction_id) {
+    bool grant_shared(const string& var_name, int transaction_id) {
       PermissionQueue& deque = m_vars[var_name];
 
       if (deque.empty()) {
@@ -61,7 +62,7 @@ namespace block_manager {
       return true;
     }
 
-    bool grant_exclusive(string var_name, int transaction_id) {
+    bool grant_exclusive(const string& var_name, int transaction_id) {
       PermissionQueue& deque = m_vars[var_name];
 
       if (deque.empty()) {
@@ -81,6 +82,34 @@ namespace block_manager {
       });
 
       return true;
+    }
+
+    bool pop_permission(const string& var_name, int transaction_id) {
+      PermissionQueue& deque = m_vars[var_name];
+
+      for (auto it = deque.begin(); it != deque.end(); ++it) {
+        if (it->transaction_id == transaction_id) {
+          deque.erase(it);
+          update_permissions(var_name);
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+  private:
+
+    void update_permissions(const string& var_name) {
+      PermissionQueue& deque = m_vars[var_name];
+      if (deque.empty() || deque[0].granted) return;
+
+      deque[0].granted = true;
+      for (auto& permission : deque) {
+        if (permission.type == Permission::EXCLUSIVE)
+          return;
+        permission.granted = true;
+      }
     }
   };
 
