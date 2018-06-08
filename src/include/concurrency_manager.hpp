@@ -5,21 +5,21 @@
 #include <unordered_map>
 
 #include <data_types.hpp>
-#include <block_manager.hpp>
+#include <lock_manager.hpp>
 
 namespace concurrency_manager {
 
   using namespace std;
   using namespace data_types;
-  using namespace block_manager;
+  using namespace lock_manager;
 
   class ConcurrencyManager {
   private:
-    BlockManager m_block_manager;
+    LockManager m_lock_manager;
     unordered_map<string, DataType> m_vars;
 
   public:
-        
+
 
   };
 
