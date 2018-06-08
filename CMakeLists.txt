@@ -14,3 +14,4 @@ add_executable(scppdb ${SOURCES})
 
 # Executables test
 add_executable(lock_manager test/lock_manager.cpp)
+add_executable(data_type test/data_type.cpp)
