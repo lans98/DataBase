@@ -23,6 +23,16 @@ namespace table {
         string name;
         Type   type;
         size_t index;
+        bool   visible;
+
+        static Field new_field(string name) {
+            return Field {
+                .name = name,
+                .type = UNKNOWN,
+                .index = 0,
+                .visible = true
+            };
+        } 
 
         bool operator<(const Field& r) const { return name < r.name; }
         bool operator>(const Field& r) const { return name > r.name; }
