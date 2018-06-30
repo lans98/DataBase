@@ -103,7 +103,17 @@ namespace table {
 
     // abstraction for a table, holding fields and 
     // a record storage manipulating posible records (i.e. rows)
+    template <size_t no_pk>
     class Table {
+    public:
+        using PrimaryKey = array<string, no_pk>;
+        using RecordStoragePtr = unique_ptr<RecordStorage>;
+
+        struct OperationResult {
+            optional<Table> table;
+            optional<Error> error;
+        };
+
     private:
         friend class Record;
 
