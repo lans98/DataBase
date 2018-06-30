@@ -1,16 +1,20 @@
 #ifndef SCPPDB_TABLE_HPP
 #define SCPPDB_TABLE_HPP
 
+#include <error.hpp>
 #include <config.hpp>
 #include <data_types.hpp>
 
 #include <set>
+#include <array>
 #include <vector>
+#include <memory>
 #include <initializer_list>
 
 namespace table {
 
     using namespace std;
+    using namespace error;
     using namespace config;
     using namespace data_types;
 
