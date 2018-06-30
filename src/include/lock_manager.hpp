@@ -5,11 +5,13 @@
 #include <iostream>
 #include <unordered_map>
 
+#include <table.hpp>
 #include <data_types.hpp>
 
 namespace lock_manager {
 
   using namespace std;
+  using namespace table;
   using namespace data_types;
 
   struct Permission {
@@ -26,14 +28,14 @@ namespace lock_manager {
 
   class LockManager {
   private:
-    unordered_map<string, PermissionQueue> m_vars;
+    unordered_map<Record*, PermissionQueue> m_vars;
 
   public:
     LockManager() = default;
     LockManager(const LockManager&) = delete;
 
-    bool grant_shared(const string& var_name, int transaction_id) {
-      PermissionQueue& deque = m_vars[var_name];
+    bool grant_shared(Record* record, int transaction_id) {
+      PermissionQueue& deque = m_vars[record];
 
       if (deque.empty()) {
         deque.push_back(Permission{
@@ -47,23 +49,27 @@ namespace lock_manager {
 
       Permission permission;
 
-      permission = deque[0];
-      if (permission.type == Permission::EXCLUSIVE && permission.granted)
-        return false;
+      bool grant_value;
 
+      // Check if the top permission on the deque is exclusive and granted
+      permission = deque[0];
+      grant_value = !(permission.type == Permission::EXCLUSIVE && permission.granted);
+
+      // Check if the last permission on the deque is shared and granted
       permission = deque.back();
-      bool grant_value = permission.type == Permission::SHARED && permission.granted;
+      grant_value = grant_value && (permission.type == Permission::SHARED && permission.granted);
+
       deque.push_back(Permission{
         .type = Permission::SHARED,
         .granted = grant_value,
         .transaction_id = transaction_id
       });
 
-      return true;
+      return grant_value;
     }
 
-    bool grant_exclusive(const string& var_name, int transaction_id) {
-      PermissionQueue& deque = m_vars[var_name];
+    bool grant_exclusive(Record* record, int transaction_id) {
+      PermissionQueue& deque = m_vars[record];
 
       if (deque.empty()) {
         deque.push_back(Permission{
@@ -81,16 +87,16 @@ namespace lock_manager {
         .transaction_id = transaction_id
       });
 
-      return true;
+      return false;
     }
 
-    bool pop_permission(const string& var_name, int transaction_id) {
-      PermissionQueue& deque = m_vars[var_name];
+    bool pop_permission(Record* record, int transaction_id) {
+      PermissionQueue& deque = m_vars[record];
 
       for (auto it = deque.begin(); it != deque.end(); ++it) {
         if (it->transaction_id == transaction_id) {
           deque.erase(it);
-          update_permissions(var_name);
+          update_permissions(record);
           return true;
         }
       }
@@ -100,8 +106,8 @@ namespace lock_manager {
 
   private:
 
-    void update_permissions(const string& var_name) {
-      PermissionQueue& deque = m_vars[var_name];
+    void update_permissions(Record* record) {
+      PermissionQueue& deque = m_vars[record];
       if (deque.empty() || deque[0].granted) return;
 
       deque[0].granted = true;

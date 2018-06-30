@@ -15,10 +15,11 @@ namespace concurrency_manager {
 
   class ConcurrencyManager {
   private:
-    LockManager m_lock_manager;
-    unordered_map<string, DataType> m_vars;
+    LockManager             m_lock_manager;
+    unordered_map<Record*, DataType> m_vars;
 
   public:
+
 
 
   };
