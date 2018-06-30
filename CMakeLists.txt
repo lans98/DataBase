@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.9)
 project(SCPPDB)
 
+enable_testing()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -14,4 +15,6 @@ add_executable(scppdb ${SOURCES})
 
 # Executables test
 add_executable(lock_manager test/lock_manager.cpp)
-add_executable(data_type test/data_type.cpp)
+
+# Tests
+add_test(lock_manager_test lock_manager)
