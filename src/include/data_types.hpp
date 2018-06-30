@@ -19,9 +19,12 @@ namespace data_types {
         long, 
         string, 
         bool,
-        char >;
+        char
+        // agreggate new types starting here
+    >;
 
     enum Type : size_t {
+        // known types
         SHORT,
         UINT,
         ULONG,
@@ -31,7 +34,11 @@ namespace data_types {
         LONG,
         STRING,
         BOOL,
-        CHAR
+        CHAR,
+        // aggregate new types starting here
+
+        // don't agreggate nothing after here
+        UNKNOWN
     };
 }
 
