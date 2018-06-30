@@ -14,32 +14,36 @@ namespace table {
     using namespace config;
     using namespace data_types;
 
+    // abstraction for fields (i.e. id for columns)
     struct Field {
         string name;
         Type   type;
         size_t index;
 
-        bool operator<(const Field& r) { return name < r.name; }
-        bool operator>(const Field& r) { return name > r.name; }
-        bool operator==(const Field& r) { return name == r.name; }
-        bool operator!=(const Field& r) { return name == r.name; }
+        bool operator<(const Field& r) const { return name < r.name; }
+        bool operator>(const Field& r) const { return name > r.name; }
+        bool operator==(const Field& r) const { return name == r.name; }
+        bool operator!=(const Field& r) const { return name == r.name; }
     };
 
+    // abstraction for rows
     class Record {
     private:
         vector<DataType> values;
 
     public:
         Record() = default;
-
     };
 
+    // abstraction for manipulate rows in disk
     class RecordStorage {
     private:
         // B+ goes here 
     public:
     };
 
+    // abstraction for a table, holding fields and 
+    // a record storage manipulating posible records (i.e. rows)
     class Table {
     private:
         friend class Record;
