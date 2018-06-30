@@ -47,13 +47,58 @@ namespace table {
 
     public:
         Record() = default;
+        Record(const Record&) = default;
+        Record(vector<DataType> vals): values(move(vals)) {}
     };
 
     // abstraction for manipulate rows in disk
     class RecordStorage {
     private:
-        // B+ goes here 
+        // B+ object (impl is in btree.hpp)
+        
     public:
+        // TODO
+        bool insert(Record) {
+            return false;
+        }
+
+        // TODO
+        bool remove(Record) {
+            return false;
+        }
+
+        // TODO
+        bool is_empty() {
+            return true;
+        }
+
+        // TODO
+        class Iterator {
+        private:
+
+        public:
+        
+            Record /*& (reference)*/ operator*() { return Record(); }
+            Record /*& (reference)*/ operator->() { return Record(); }
+           
+            bool operator==(const Iterator& rhs) { return false; }
+            bool operator!=(const Iterator& rhs) { return false; }
+            
+            Iterator operator++() { return *this; }
+            Iterator operator++(int) { return *this; }
+        };
+
+        // TODO
+        Iterator begin() {  return Iterator(); }
+
+        // TODO
+        Iterator end() { return Iterator(); }
+
+        // TODO
+        Iterator last() { return Iterator(); }
+
+        // TODO 
+        Iterator search(Record) { return Iterator(); }
     };
 
     // abstraction for a table, holding fields and 
