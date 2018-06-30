@@ -10,115 +10,145 @@
 
 namespace lock_manager {
 
-  using namespace std;
-  using namespace table;
-  using namespace data_types;
+    using namespace std;
+    using namespace table;
+    using namespace data_types;
 
-  struct Permission {
-    enum Type : int {
-      SHARED, EXCLUSIVE
+    struct Permission {
+        enum Type : int {
+            SHARED, EXCLUSIVE
+        };
+
+        Type type;
+        bool granted;
+        int  transaction_id;
     };
 
-    Type type;
-    bool granted;
-    int  transaction_id;
-  };
+    using PermissionQueue = deque<Permission>;
 
-  using PermissionQueue = deque<Permission>;
+    class LockManager {
+    private:
+        // TODO: it may necessary to choose another key type 
+        unordered_map<Record*, PermissionQueue> m_vars;
 
-  class LockManager {
-  private:
-    unordered_map<Record*, PermissionQueue> m_vars;
+    public:
+        LockManager() = default;
+        LockManager(const LockManager&) = delete;
 
-  public:
-    LockManager() = default;
-    LockManager(const LockManager&) = delete;
+        bool grant_shared(Record* record, int transaction_id) {
+            PermissionQueue& deque = m_vars[record];
 
-    bool grant_shared(Record* record, int transaction_id) {
-      PermissionQueue& deque = m_vars[record];
+            // if deque is empty we can safely push a new shared permission
+            // and grant it
+            if (deque.empty()) {
+                deque.push_back(Permission{
+                    .type = Permission::SHARED,
+                    .granted = true,
+                    .transaction_id = transaction_id
+                });
 
-      if (deque.empty()) {
-        deque.push_back(Permission{
-          .type = Permission::SHARED,
-          .granted = true,
-          .transaction_id = transaction_id
-        });
+                return true;
+            }
 
-        return true;
-      }
+            Permission permission;
 
-      Permission permission;
+            bool grant_value;
 
-      bool grant_value;
+            // Check if the top permission on the deque is exclusive and granted
+            // if it's true, we can push a new shared permission but we can grant 
+            // it, so we return false 
+            permission = deque[0];
+            grant_value = !(permission.type == Permission::EXCLUSIVE && permission.granted);
 
-      // Check if the top permission on the deque is exclusive and granted
-      permission = deque[0];
-      grant_value = !(permission.type == Permission::EXCLUSIVE && permission.granted);
+            // Check if the last permission on the deque is shared and granted
+            // if it's true depends on the result of the above condition
+            permission = deque.back();
+            grant_value = grant_value && (permission.type == Permission::SHARED && permission.granted);
 
-      // Check if the last permission on the deque is shared and granted
-      permission = deque.back();
-      grant_value = grant_value && (permission.type == Permission::SHARED && permission.granted);
+            deque.push_back(Permission{
+                .type = Permission::SHARED,
+                .granted = grant_value,
+                .transaction_id = transaction_id
+            });
 
-      deque.push_back(Permission{
-        .type = Permission::SHARED,
-        .granted = grant_value,
-        .transaction_id = transaction_id
-      });
-
-      return grant_value;
-    }
-
-    bool grant_exclusive(Record* record, int transaction_id) {
-      PermissionQueue& deque = m_vars[record];
-
-      if (deque.empty()) {
-        deque.push_back(Permission{
-          .type = Permission::EXCLUSIVE,
-          .granted = true,
-          .transaction_id = transaction_id
-        });
-
-        return true;
-      }
-
-      deque.push_back(Permission{
-        .type = Permission::EXCLUSIVE,
-        .granted = false,
-        .transaction_id = transaction_id
-      });
-
-      return false;
-    }
-
-    bool pop_permission(Record* record, int transaction_id) {
-      PermissionQueue& deque = m_vars[record];
-
-      for (auto it = deque.begin(); it != deque.end(); ++it) {
-        if (it->transaction_id == transaction_id) {
-          deque.erase(it);
-          update_permissions(record);
-          return true;
+            // finally return the grant value, if it's false it means we added the
+            // permission to the deque, but we didn't grant it
+            return grant_value;
         }
-      }
 
-      return false;
-    }
+        bool grant_exclusive(Record* record, int transaction_id) {
+            PermissionQueue& deque = m_vars[record];
 
-  private:
+            // if deque is empty, we can safely push a new exclusive permission
+            if (deque.empty()) {
+                deque.push_back(Permission{
+                    .type = Permission::EXCLUSIVE,
+                    .granted = true,
+                    .transaction_id = transaction_id
+                });
 
-    void update_permissions(Record* record) {
-      PermissionQueue& deque = m_vars[record];
-      if (deque.empty() || deque[0].granted) return;
+                return true;
+            }
 
-      deque[0].granted = true;
-      for (auto& permission : deque) {
-        if (permission.type == Permission::EXCLUSIVE)
-          return;
-        permission.granted = true;
-      }
-    }
-  };
+            // in the other case, the deque isn't empty then there is 
+            // a chain of shared permissions, or an exclusive permission 
+            // on the top, in all cases, we can't grant the new permission 
+            // so we just push it and return false, because it's waiting to 
+            // be granted
+            deque.push_back(Permission{
+                .type = Permission::EXCLUSIVE,
+                .granted = false,
+                .transaction_id = transaction_id
+            });
 
+            return false;
+        }
+
+        // return value shows success or failure
+        bool pop_permission(Record* record, int transaction_id) {
+            PermissionQueue& deque = m_vars[record];
+
+            // pop the first permission found in the deque of the 
+            // record in use and same transaction id
+            for (auto it = deque.begin(); it != deque.end(); ++it) {
+                if (it->transaction_id == transaction_id) {
+                    deque.erase(it);
+                    update_permissions(record);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+    private:
+
+        void update_permissions(Record* record) {
+            PermissionQueue& deque = m_vars[record];
+            // if the deque is empty, early return
+            // if the top permission in the deque is granted
+            // then it should be either a chain of contiguous shared 
+            // permissions or an unique exclusive permission, in that
+            // case early return
+            if (deque.empty() || deque[0].granted) return;
+
+            // now grant the top permission in the deque 
+            deque[0].granted = true;
+            // iterate over the deque, searching if there is an
+            // exclusive permission, there are two cases:
+            // the top permission is shared and we already granted it, 
+            // if the contiguous permissions are also shared we can 
+            // grant them until we find an exclusive permission that breaks
+            // the chain, otherwise if the top permission we granted is 
+            // exclusive, when we start iterating we would enter the 'if' and
+            // break the 'for'
+            for (auto& permission : deque) {
+                if (permission.type == Permission::EXCLUSIVE)
+                    return;
+                permission.granted = true;
+            }
+        }
+    };
 }
 
 #endif

@@ -9,20 +9,20 @@
 
 namespace concurrency_manager {
 
-  using namespace std;
-  using namespace data_types;
-  using namespace lock_manager;
+    using namespace std;
+    using namespace data_types;
+    using namespace lock_manager;
 
-  class ConcurrencyManager {
-  private:
-    LockManager             m_lock_manager;
-    unordered_map<Record*, DataType> m_vars;
+    class ConcurrencyManager {
+    private:
+        LockManager                      m_lock_manager;
+        unordered_map<Record*, DataType> m_vars;
 
-  public:
+    public:
 
 
 
-  };
+    };
 
 }
 
