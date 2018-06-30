@@ -117,15 +117,17 @@ namespace table {
     private:
         friend class Record;
 
-        string      name;
-        string      primary_key;
-        set<Field>  fields;
+        string                name;
+        vector<Field>         fields;
+        PrimaryKey            primary_key;
 
-        RecordStorage*  storage;
+        RecordStoragePtr      storage;
 
     public:
-        Table(string name): name(move(name)), primary_key("") {}
-        Table(string name, const initializer_list<Field>& fields_list): name(move(name)), primary_key("") {
+        Table(): name(""), primary_key(), storage(nullptr) {}
+        Table(const Table&) = default;
+        Table(string name): name(move(name)), primary_key(), storage(nullptr) {}
+        Table(string name, const initializer_list<Field>& fields_list): name(move(name)), primary_key(), storage(nullptr) {
             size_t index = 0;
 
             for (auto& field : fields_list) {
