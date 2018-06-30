@@ -21,7 +21,7 @@ namespace data_types {
         bool,
         char >;
 
-    enum Type : int {
+    enum Type : size_t {
         SHORT,
         UINT,
         ULONG,
