@@ -9,6 +9,7 @@
 #include <array>
 #include <vector>
 #include <memory>
+#include <algorithm>
 #include <initializer_list>
 
 namespace table {
@@ -22,14 +23,12 @@ namespace table {
     struct Field {
         string name;
         Type   type;
-        size_t index;
         bool   visible;
 
         static Field new_field(string name) {
             return Field {
                 .name = name,
                 .type = UNKNOWN,
-                .index = 0,
                 .visible = true
             };
         } 
@@ -103,10 +102,9 @@ namespace table {
 
     // abstraction for a table, holding fields and 
     // a record storage manipulating posible records (i.e. rows)
-    template <size_t no_pk>
     class Table {
     public:
-        using PrimaryKey = array<string, no_pk>;
+        using PrimaryKey = vector<string>;
         using RecordStoragePtr = unique_ptr<RecordStorage>;
 
         struct OperationResult {
@@ -119,118 +117,136 @@ namespace table {
 
         string                name;
         vector<Field>         fields;
+        size_t                pk_size;
         PrimaryKey            primary_key;
 
         RecordStoragePtr      storage;
 
     public:
-        Table(): name(""), primary_key(), storage(nullptr) {}
+        Table(): name(""), pk_size(0UL), primary_key(), storage(nullptr) {}
         Table(const Table&) = default;
-        Table(string name): name(move(name)), primary_key(), storage(nullptr) {}
-        Table(string name, const initializer_list<Field>& fields_list): name(move(name)), primary_key(), storage(nullptr) {
-            size_t index = 0;
-
+        Table(string name): name(move(name)), pk_size(0UL), primary_key(), storage(nullptr) {}
+        Table(string name, const initializer_list<Field>& fields_list): name(move(name)), pk_size(0UL), primary_key(), storage(nullptr) {
             for (auto& field : fields_list) {
-                fields.insert(Field { 
+                fields.push_back(Field { 
                     .name = field.name,
                     .type = field.type,
-                    .index = index
                 });
-
-                index += 1;
             }
         }
 
         PrimaryKey get_primary_key() const { return primary_key; }
-        void set_primary_key(PrimaryKey pk) const { primary_key = move(pk); }
+        optional<Error> set_primary_key(PrimaryKey pk) { 
+            for (auto& field: pk) {
+                auto it = find(fields.begin(), fields.end(), field);
+                if (it == fields.end())
+                    return Error(ErrorKind::INCORRECT_PARAMS, "Given primary key is invalid, some fields weren't found for this table");
+            }
+
+            pk_size = pk.size();
+            primary_key = move(pk); 
+
+            return nullopt;
+        }
 
         [[nodiscard]] // You shouldn't discard this return value
-        OperationResult project(const vector<Field>& sel_fields) {
+        OperationResult project(vector<Field> sel_fields) {
             // Simple cases where we don't return a result, just an error
             if (!storage)
                 return { nullopt, Error(ErrorKind::NULL_STORAGE, "The storage doesn't exist for this table") };
 
             if (storage->is_empty()) 
-                return { nullopt, Error(ErrorKind::EMPTY_STORAGE, "The storage exist but it's empty for this table") };
+                return { nullopt, Error(ErrorKind::EMPTY_STORAGE, "The storage exists but it's empty for this table") };
 
             if (fields.size() < sel_fields.size())
                 return { nullopt, Error(ErrorKind::INCORRECT_PARAMS, "The vector of fields is bigger than the actual table fields size") };
 
+            // Three conditions that also need to be checked
+            bool both_are_the_same;
+            bool sel_fields_is_valid;
+            bool present_primary_key;
 
-            // check if fields is equal to sel_fields
-            bool both_are_the_same = [&](){ 
-                if (fields.size() != sel_fields.size())
-                    return false;
+            { // inner scope to check the three above conditions
+              // also used to updated selected fields types and visibility
+                both_are_the_same = (fields.size() == sel_fields.size());
 
                 auto itr1 = fields.begin();
                 auto itr2 = sel_fields.begin();
-                for (; itr1 != fields.end(); ++itr1, ++itr2)
-                    if (*itr1 != *itr2)                
-                        return false;
+                auto end2 = sel_fields.end();
 
-                return true;
-            }();
+                size_t found_keys = 0;
+                
+                sel_fields_is_valid = true;
+                for (; itr2 != end2; ++itr1, ++itr2) {
+                    if (*itr1 != *itr2) {
+                        sel_fields_is_valid = false;
+                        break;
+                    }
+
+                    itr2->type    = itr1->type;
+                    itr2->visible = true;
+                    auto it = find(primary_key.begin(), primary_key.end(), *itr2);
+                    if (it != primary_key.end()) found_keys += 1;
+                }
+
+                both_are_the_same = (sel_fields_is_valid && both_are_the_same);
+                present_primary_key = (found_keys == pk_size) && pk_size;
+            }
+
+            // handle results 
+            if (!sel_fields_is_valid)
+                return { nullopt, Error(ErrorKind::INCORRECT_PARAMS, "Some selected fields are invalid for this table") };
 
             if (both_are_the_same)
                 return { *this, nullopt };
 
-            // check if sel_fields are valid
-            bool sel_fields_are_valid = [&](){
-                auto itr1 = fields.begin();
-                auto itr2 = sel_fields.begin();
-                for (; itr1 != fields.end() || itr2 != sel_fields.end(); ++itr1, ++itr2)
-                    if (*itr1 != *itr2)
-                        return false;
+            // Above conditions passed so we can finally create an empty table 
+            // that will hold the result
+            Table result;
 
-                return true;            
-            }();
-
-            if (!sel_fields_are_valid) 
-                return { nullopt, Error(ErrorKind::INCORRECT_PARAMS, "Some selected fields are invalid for this table") };
-
-            // check if the primary_key is present on the sel_fields if it isn't 
-            // or it's but partially (compound primary key) then use an auto counter as
-            // primary key for the result (this may change the order)
-            size_t counter_step = [&](){
-
-            }();
-                
-            if (counter_step)
+            // if the primary key isn't complete in the selected fields, then we
+            // need to use an autocounter has primary key
+            if (!present_primary_key)
                 result.fields.push_back(Field {
                     .name = "_counter_",
                     .type = ULONG,
-                    .index = 0,
                     .visible = false
                 });
 
-            // If we are here, then we know that sel_fields size is less than fields size
-            // and that all selected fields are valid for this table now start iterating 
-            // over all the records and select just specified fields
-            Table result;
+            // set the step for the autocounter if needed
+            size_t step_counter = present_primary_key? 0UL : 1UL;
+            size_t auto_counter = 0UL;
 
-            size_t counter = 0;
             auto end = storage->end();
             for (auto itr = storage->begin(); itr != end; ++itr) {
-                //Record& record = *itr;
                 vector<DataType> vals;
-                if (counter_step)
+                if (step_counter)
                     vals.reserve(sel_fields.size() + 1);
                 else
                     vals.reserve(sel_fields.size());
 
-                if (counter_step) {
-                    vals.push_back(counter);
-                    counter += counter_step;
+                if (step_counter) {
+                    vals.push_back(auto_counter);
+                    auto_counter += step_counter;
                 }
 
                 for (auto& field : sel_fields) {
                     auto it = find(fields.begin(), fields.end(), field);
-                    vals.push_back(itr->values[it->index]);
+                    auto pos = (it - fields.begin());
+                    vals.push_back(itr->values[pos]);
                 }
             }
 
             result.fields = sel_fields;
-            return result;
+            if (present_primary_key) {
+                result.set_primary_key(primary_key);
+            } else {
+                vector<string> pk;
+                pk.push_back("_counter_");
+                result.set_primary_key(pk);
+            }
+
+            return { result, nullopt }
         }
     };
 
