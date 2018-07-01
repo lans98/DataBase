@@ -150,7 +150,7 @@ namespace table {
         }
 
         [[nodiscard]] // You shouldn't discard this return value
-        OperationResult project(vector<Field> sel_fields) {
+        OperationResult projection(vector<Field> sel_fields) {
             // Simple cases where we don't return a result, just an error
             if (!storage)
                 return { nullopt, Error(ErrorKind::NULL_STORAGE, "The storage doesn't exist for this table") };
