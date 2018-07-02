@@ -3,6 +3,7 @@
 
 #include <error.hpp>
 #include <config.hpp>
+#include <storage.hpp>
 #include <data_types.hpp>
 
 #include <set>
@@ -17,88 +18,8 @@ namespace table {
     using namespace std;
     using namespace error;
     using namespace config;
+    using namespace storage;
     using namespace data_types;
-
-    // abstraction for fields (i.e. id for columns)
-    struct Field {
-        string name;
-        Type   type;
-        bool   visible;
-
-        static Field new_field(string name) {
-            return Field {
-                .name = name,
-                .type = UNKNOWN,
-                .visible = true
-            };
-        } 
-
-        bool operator<(const Field& r) const { return name < r.name; }
-        bool operator>(const Field& r) const { return name > r.name; }
-        bool operator==(const Field& r) const { return name == r.name; }
-        bool operator!=(const Field& r) const { return name == r.name; }
-    };
-
-    // abstraction for rows
-    class Record {
-    private:
-        vector<DataType> values;
-
-    public:
-        Record() = default;
-        Record(const Record&) = default;
-        Record(vector<DataType> vals): values(move(vals)) {}
-    };
-
-    // abstraction for manipulate rows in disk
-    class RecordStorage {
-    private:
-        // B+ object (impl is in btree.hpp)
-        
-    public:
-        // TODO
-        bool insert(Record) {
-            return false;
-        }
-
-        // TODO
-        bool remove(Record) {
-            return false;
-        }
-
-        // TODO
-        bool is_empty() {
-            return true;
-        }
-
-        // TODO
-        class Iterator {
-        private:
-
-        public:
-        
-            Record /*& (reference)*/ operator*() { return Record(); }
-            Record /*& (reference)*/ operator->() { return Record(); }
-           
-            bool operator==(const Iterator& rhs) { return false; }
-            bool operator!=(const Iterator& rhs) { return false; }
-            
-            Iterator operator++() { return *this; }
-            Iterator operator++(int) { return *this; }
-        };
-
-        // TODO
-        Iterator begin() {  return Iterator(); }
-
-        // TODO
-        Iterator end() { return Iterator(); }
-
-        // TODO
-        Iterator last() { return Iterator(); }
-
-        // TODO 
-        Iterator search(Record) { return Iterator(); }
-    };
 
     // abstraction for a table, holding fields and 
     // a record storage manipulating posible records (i.e. rows)
