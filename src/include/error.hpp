@@ -10,7 +10,8 @@ namespace error {
     enum ErrorKind : int {
         NULL_STORAGE,
         EMPTY_STORAGE, 
-        INCORRECT_PARAMS
+        INCORRECT_PARAMS,
+        DUPLICATE_VALUE,
     };
 
     class Error {
@@ -35,6 +36,9 @@ namespace error {
                     break;
                 case INCORRECT_PARAMS:
                     kind_msg = "INCORRECT_PARAMS";
+                    break;
+                case DUPLICATE_VALUE:
+                    kind_msg = "DUPLICATE_VALUE";
                     break;
                 default:
                     kind_msg = "UNKNOWN_CODE";
