@@ -7,6 +7,7 @@
 #include <stdexcept>
 
 namespace data_types {
+
     using namespace std;
 
     using DataType = variant<
