@@ -1,8 +1,21 @@
 #ifndef SCPPDB_ADDRESS_HPP
 #define SCPPDB_ADDRESS_HPP
 
+#include <fstream>
+
 namespace address {
 
+    using namespace std;
+
+    /**
+     * @field disk_offset, si el archivo es muy grande, representa un offset de 
+     *                     ULONG::MAX * disk_offset
+     * @field disk_address, la posición hasta la que tenemos que mover el cursor
+     *                      en el archivo
+     * @field memory_address, dirección en memoria
+     * @field using_memory, sirve para saber si estamos usando la dirección en 
+     *                      memoria o en disco
+     */
     template <class T>
     class Address {
     private:
@@ -37,8 +50,9 @@ namespace address {
             if (using_memory)        
                 return memory_address;
             
-            // parse type T
-            // TODO
+            // TODO: podemos usar sizeof(T) para reconocer el objeto
+            // en disco, pero tendria que estar en binario en 
+            // el disco
         }
 
     };
