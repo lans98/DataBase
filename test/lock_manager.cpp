@@ -1,8 +1,6 @@
-#include <iostream>
-#include <table.hpp>
-#include <lock_manager.hpp>
+#include <entity/table.hpp>
+#include <concurrency/lock_manager.hpp>
 
-using namespace std;
 using namespace lock_manager;
 using namespace table;
 

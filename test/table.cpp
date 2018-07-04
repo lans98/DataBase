@@ -1,13 +1,11 @@
-#include <table.hpp>
-#include <iostream>
+#include <entity/table.hpp>
 
-using namespace std;
 using namespace table;
 
 int main() {
     Table table("test", {
-        { "id", SHORT },
-        { "name", STRING },
-        { "sex", CHAR }
+        Field("id", SHORT),
+        Field("name", STRING),
+        Field("sex", CHAR)
     });
 }
