@@ -3,14 +3,13 @@
 
 #include <cstring>
 #include <fstream>
+#include <optional>
 
 namespace address {
 
     using namespace std;
 
     /**
-     * @field disk_offset, si el archivo es muy grande, representa un offset de 
-     *                     ULONG::MAX * disk_offset
      * @field disk_address, la posición hasta la que tenemos que mover el cursor
      *                      en el archivo
      * @field memory_address, dirección en memoria
@@ -19,51 +18,60 @@ namespace address {
      */
     template <class T>
     class Address {
+    public:
+        using DiskAddress = optional<size_t>;
+        using MemoryAddress = T*;
+
     private:
-        size_t disk_offset;
-        size_t disk_address;
-        T*     memory_address;
-        bool   using_memory;
+        DiskAddress    disk_address;
+        MemoryAddress  memory_address;
+        bool           using_memory;
 
     public:
-        Address(size_t disk_address, size_t disk_offset = 0): 
-            disk_offset(disk_offset),
+        Address(DiskAddress disk_address): 
             disk_address(disk_address),
             memory_address(nullptr),
             using_memory(false) {}
 
-        Address(T* memory_address):
-            disk_offset(0UL),
+        Address(MemoryAddress memory_address):
             disk_address(0UL),
             memory_address(memory_address),
             using_memory(true) {}
 
-        Address(size_t disk_address, size_t disk_offset, T* memory_address):
-            disk_offset(disk_offset),
+        Address(DiskAddress disk_address, MemoryAddress memory_address):
             disk_address(disk_address),
             memory_address(memory_address),
             using_memory(true) {}
 
         bool using_disk_address() { return !using_memory; }
         bool using_memory_address() { return using_memory; }
+        bool exists_on_disk() { return disk_address.has_value(); }
 
         T* get(string file_name = "") {
             if (using_memory)        
                 return memory_address;
             
-            // TODO: podemos usar sizeof(T) para reconocer el objeto 
-            // en disco, pero tendria que estar en binario en el disco
             if (file_name == "") 
                 return nullptr;
 
-            ifstream file(file_name, ios::binary);
-            T* data; 
-            // TODO: Read binary info an put it in data
-            T* newt = new T();
-            memcpy(newt, data, sizeof(T));
-            memory_address = newt;
-        }
+            if (!exists_on_disk())
+                return nullptr;
 
+            ifstream file(file_name, ios::binary);
+            if (!file) 
+                return nullptr;
+
+            // allocate space for a new T
+            T* data = new T(); 
+
+            // seek and read data
+            file.seekg(*disk_address);
+            file.read(reinterpret_cast<char*>(data), sizeof(T));
+
+            // assign memory address and return it
+            memory_address = data;
+            return memory_address;
+        }
     };
 }
 
