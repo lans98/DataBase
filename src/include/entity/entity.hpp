@@ -4,6 +4,8 @@
 #include <string>
 #include <random>
 #include <limits>
+#include <fstream>
+#include <stdexcept>
 
 namespace entity {
 
@@ -14,19 +16,21 @@ namespace entity {
     /**
      * Generate random unique ID's for each entity
      * database is also a global entity, but it always
-     * have the ID 1
+     * have the ID 1, and the ID 0 is generic for entities
+     * that are waiting for it's ID
      */
-    class EntityIDGenerator {
+    class EntityIDManager {
     private:
         set<EntityID> used_ids;
 
-        static EntityIDGenerator* singleton;
-        EntityIDGenerator(): used_ids() {}
+        static EntityIDManager* singleton;
+        EntityIDManager(): used_ids() {}
 
     public:
-        static EntityIDGenerator& get() {
+        static EntityIDManager& get() {
             if (!singleton)
-                singleton = new EntityIDGenerator();
+                singleton = new EntityIDManager();
+
             return *singleton;
         }
 
@@ -37,9 +41,10 @@ namespace entity {
 
             EntityID id;
             do {
-                id = dist(gen);
+                id = dist(gen); 
             } while (used_ids.find(id) != used_ids.end());
 
+            used_ids.insert(id);
             return id;
         }
 
