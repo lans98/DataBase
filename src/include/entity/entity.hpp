@@ -97,6 +97,8 @@ namespace entity {
         }
     };
 
+    EntityIDManager* EntityIDManager::singleton = nullptr;
+
     /**
      * Entity class used to identify different
      * kinds of objects in the data base like
@@ -104,11 +106,19 @@ namespace entity {
      * because they inherit this type
      */
     class Entity {
-    private:
+    protected:
         EntityID id;
 
     public:
-        Entity(): id(EntityIDGenerator::get().generate()) {}
+        Entity(bool gen = true): id(gen? EntityIDManager::get().generate() : 0UL) {}
+        Entity(EntityID id): id(id) { 
+            if (!EntityIDManager::get().save(id))
+                throw runtime_error("Trying to save an already used id");
+        }
+
+        virtual ~Entity() { EntityIDManager::get().free(id); }
+
         EntityID get_id() { return id; }        
+        void set_id(EntityID id) { this->id = id; }
     };
 }
