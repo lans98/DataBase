@@ -5,12 +5,14 @@
 #include <core/storage.hpp>
 #include <core/data_types.hpp>
 #include <entity/entity.hpp>
+#include <entity/field.hpp>
 #include <entity/record.hpp>
 
 #include <set>
 #include <array>
 #include <vector>
 #include <memory>
+#include <utility>
 #include <algorithm>
 #include <initializer_list>
 
@@ -20,6 +22,7 @@ namespace table {
     using namespace error;
     using namespace config;
     using namespace entity;
+    using namespace field;
     using namespace record;
     using namespace storage;
     using namespace data_types;
@@ -52,17 +55,23 @@ namespace table {
         RecordStoragePtr      storage;
 
     public:
-        Table(): Entity("Table"), name(""), pk_size(0UL), primary_key(), storage(nullptr) {}
+        Table(): Entity(), name(""), pk_size(0UL), primary_key(), storage(nullptr) {}
         Table(const Table&) = default;
-        Table(string name): Entity("Table"), name(move(name)), pk_size(0UL), primary_key(), storage(nullptr) {}
-        Table(string name, const initializer_list<Field>& fields_list): Entity("Table"), name(move(name)), pk_size(0UL), primary_key(), storage(nullptr) {
-            for (auto& field : fields_list) {
-                fields.push_back((Field(
-                   field.name,
-                   field.type,
-                   field.visible
-                ));
-            }
+        Table(string name): 
+            Entity(), 
+            name(move(name)), 
+            pk_size(0UL), 
+            primary_key(), 
+            storage(nullptr) {}
+
+        Table(string name, const initializer_list<Field>& fields_list): 
+            Entity(), 
+            name(move(name)), 
+            pk_size(0UL), 
+            primary_key(), 
+            storage(nullptr) 
+        {
+            copy(fields_list.begin(), fields_list.end(), fields.begin());
         }
 
         PrimaryKey get_primary_key() const { return primary_key; }
@@ -100,22 +109,22 @@ namespace table {
               // also used to updated selected fields types and visibility
                 both_are_the_same = (fields.size() == sel_fields.size());
 
-                auto itr1 = fields.begin();
-                auto itr2 = sel_fields.begin();
-                auto end2 = sel_fields.end();
+                auto itr = sel_fields.begin();
+                auto end = sel_fields.end();
 
                 size_t found_keys = 0;
                 
                 sel_fields_is_valid = true;
-                for (; itr2 != end2; ++itr1, ++itr2) {
-                    if (*itr1 != *itr2) {
+                for (; itr != end; ++itr) {
+                    auto search = find(fields.begin(), fields.end(), *itr);
+                    if (search == fields.end()) {
                         sel_fields_is_valid = false;
                         break;
                     }
 
-                    itr2->type    = itr1->type;
-                    itr2->visible = true;
-                    auto it = find(primary_key.begin(), primary_key.end(), *itr2);
+                    itr->set_type(search->get_type());
+                    itr->set_visible(true);
+                    auto it = find(primary_key.begin(), primary_key.end(), *itr);
                     if (it != primary_key.end()) found_keys += 1;
                 }
 
@@ -137,11 +146,7 @@ namespace table {
             // if the primary key isn't complete in the selected fields, then we
             // need to use an autocounter has primary key
             if (!present_primary_key)
-                result.fields.push_back(Field {
-                    .name = "_counter_",
-                    .type = ULONG,
-                    .visible = false
-                });
+                result.fields.push_back(Field("_counter_", ULONG, false));
 
             // set the step for the autocounter if needed
             size_t step_counter = present_primary_key? 0UL : 1UL;
