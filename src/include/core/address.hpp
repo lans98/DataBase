@@ -1,6 +1,7 @@
 #ifndef SCPPDB_ADDRESS_HPP
 #define SCPPDB_ADDRESS_HPP
 
+#include <cstring>
 #include <fstream>
 
 namespace address {
@@ -46,13 +47,21 @@ namespace address {
         bool using_disk_address() { return !using_memory; }
         bool using_memory_address() { return using_memory; }
 
-        T* get(const char* file = "") {
+        T* get(string file_name = "") {
             if (using_memory)        
                 return memory_address;
             
-            // TODO: podemos usar sizeof(T) para reconocer el objeto
-            // en disco, pero tendria que estar en binario en 
-            // el disco
+            // TODO: podemos usar sizeof(T) para reconocer el objeto 
+            // en disco, pero tendria que estar en binario en el disco
+            if (file_name == "") 
+                return nullptr;
+
+            ifstream file(file_name, ios::binary);
+            T* data; 
+            // TODO: Read binary info an put it in data
+            T* newt = new T();
+            memcpy(newt, data, sizeof(T));
+            memory_address = newt;
         }
 
     };

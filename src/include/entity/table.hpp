@@ -3,6 +3,8 @@
 
 #include <error.hpp>
 #include <config.hpp>
+#include <entity.hpp>
+#include <record.hpp>
 #include <storage.hpp>
 #include <data_types.hpp>
 
@@ -18,12 +20,19 @@ namespace table {
     using namespace std;
     using namespace error;
     using namespace config;
+    using namespace entity;
+    using namespace record;
     using namespace storage;
     using namespace data_types;
 
-    // abstraction for a table, holding fields and 
-    // a record storage manipulating posible records (i.e. rows)
-    class Table {
+    /**
+     * Table is used to hold a vector of fields than 
+     * are the ID's for each of its colums, when we 
+     * are handling with records we can easily know 
+     * the type of each column, because fields tell
+     * us the type.
+     */
+    class Table : public Entity {
     public:
         using PrimaryKey = vector<string>;
         using RecordStoragePtr = unique_ptr<RecordStorage>;
@@ -44,15 +53,16 @@ namespace table {
         RecordStoragePtr      storage;
 
     public:
-        Table(): name(""), pk_size(0UL), primary_key(), storage(nullptr) {}
+        Table(): Entity("Table"), name(""), pk_size(0UL), primary_key(), storage(nullptr) {}
         Table(const Table&) = default;
-        Table(string name): name(move(name)), pk_size(0UL), primary_key(), storage(nullptr) {}
-        Table(string name, const initializer_list<Field>& fields_list): name(move(name)), pk_size(0UL), primary_key(), storage(nullptr) {
+        Table(string name): Entity("Table"), name(move(name)), pk_size(0UL), primary_key(), storage(nullptr) {}
+        Table(string name, const initializer_list<Field>& fields_list): Entity("Table"), name(move(name)), pk_size(0UL), primary_key(), storage(nullptr) {
             for (auto& field : fields_list) {
-                fields.push_back(Field { 
-                    .name = field.name,
-                    .type = field.type,
-                });
+                fields.push_back((Field(
+                   field.name,
+                   field.type,
+                   field.visible
+                ));
             }
         }
 
