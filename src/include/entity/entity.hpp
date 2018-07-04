@@ -1,5 +1,4 @@
-#ifndef SCPPDB_ENTITY_HPP
-#define SCPPDB_ENTITY_HPP
+#pragma once
 
 #include <string>
 
@@ -24,5 +23,3 @@ namespace entity {
         virtual string get_type() { return type; }
     };
 }
-
-#endif

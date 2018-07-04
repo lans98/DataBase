@@ -1,12 +1,11 @@
-#ifndef SCPPDB_TABLE_HPP
-#define SCPPDB_TABLE_HPP
+#pragma once
 
-#include <error.hpp>
 #include <config.hpp>
-#include <entity.hpp>
-#include <record.hpp>
-#include <storage.hpp>
-#include <data_types.hpp>
+#include <core/error.hpp>
+#include <core/storage.hpp>
+#include <core/data_types.hpp>
+#include <entity/entity.hpp>
+#include <entity/record.hpp>
 
 #include <set>
 #include <array>
@@ -182,5 +181,3 @@ namespace table {
     };
 
 }
-
-#endif

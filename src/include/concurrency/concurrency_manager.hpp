@@ -1,11 +1,10 @@
-#ifndef SCPPDB_CONCURRENCY_MANAGER_HPP
-#define SCPPDB_CONCURRENCY_MANAGER_HPP
+#pragma once
 
 #include <string>
 #include <unordered_map>
 
-#include <data_types.hpp>
-#include <lock_manager.hpp>
+#include <core/data_types.hpp>
+#include <concurrency/lock_manager.hpp>
 
 namespace concurrency_manager {
 
@@ -19,8 +18,6 @@ namespace concurrency_manager {
         unordered_map<Record*, DataType> m_vars;
 
     public:
-
-
 
     };
 

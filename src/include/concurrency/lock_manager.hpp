@@ -1,12 +1,11 @@
-#ifndef SCPPDB_LOCK_MANAGER_HPP
-#define SCPPDB_LOCK_MANAGER_HPP
+#pragma once
 
 #include <deque>
 #include <iostream>
 #include <unordered_map>
 
-#include <table.hpp>
-#include <data_types.hpp>
+#include <core/data_types.hpp>
+#include <entity/table.hpp>
 
 namespace lock_manager {
 
@@ -150,5 +149,3 @@ namespace lock_manager {
         }
     };
 }
-
-#endif
