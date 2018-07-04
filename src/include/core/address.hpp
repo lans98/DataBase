@@ -3,6 +3,7 @@
 #include <cstring>
 #include <fstream>
 #include <optional>
+#include <iostream>
 
 namespace address {
 
@@ -27,6 +28,11 @@ namespace address {
         bool           using_memory;
 
     public:
+        Address(): 
+            disk_address(nullopt),
+            memory_address(nullptr),
+            using_memory(false) {}
+
         Address(DiskAddress disk_address): 
             disk_address(disk_address),
             memory_address(nullptr),
@@ -35,18 +41,35 @@ namespace address {
         Address(MemoryAddress memory_address):
             disk_address(nullopt),
             memory_address(memory_address),
-            using_memory(true) {}
+            using_memory(memory_address) {}
 
         Address(DiskAddress disk_address, MemoryAddress memory_address):
             disk_address(disk_address),
             memory_address(memory_address),
-            using_memory(true) {}
+            using_memory(memory_address) {}
 
         bool using_disk_address() { return !using_memory; }
         bool using_memory_address() { return using_memory; }
         bool exists_on_disk() { return disk_address.has_value(); }
+        bool exists_on_memory() { return memory_address; }
 
-        T* get(string file_name = "") {
+        DiskAddress get_disk_address() {
+            return disk_address;
+        }
+
+        void set_disk_address(DiskAddress disk_address) {
+            this->disk_address = disk_address;
+        }
+
+        MemoryAddress get_memory_address() {
+            return memory_address;
+        }
+
+        void set_memory_address(MemoryAddress memory_address) {
+            this->memory_address = memory_address;
+        }
+
+        T* read(string file_name = "") {
             if (using_memory)        
                 return memory_address;
             
@@ -81,11 +104,12 @@ namespace address {
                 return false;
             
             // try to open file at the end of file
-            ofstream file(file_name, ios::binary | ios::ate);
+            ofstream file(file_name, ios::app);
             if (!file)
                 return false;
-
+            
             // write object to file
+            disk_address = file.tellp();
             file.write(reinterpret_cast<char*>(memory_address), sizeof(T));
             return true;
         }
