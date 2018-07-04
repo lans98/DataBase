@@ -1,6 +1,7 @@
 #ifndef SCPPDB_RECORD_HPP
 #define SCPPDB_RECORD_HPP
 
+#include <entity.hpp>
 #include <data_types.hpp>
 
 #include <string>
@@ -9,30 +10,41 @@
 namespace record {
 
     using namespace std;
+    using namespace entity;
     using namespace data_types;
 
-    // abstraction for fields (i.e. id for columns)
-    struct Field {
+    /**
+     * Prototypes of friend classes
+     */
+    class Table;
+
+    /**
+     * The field class is used to identify an entire 
+     * column by its name, type and if this entire 
+     * column is visible or not.
+     */
+    class Field : public Entity {
+    private:
+        friend class Table;
+
         string name;
         Type   type;
         bool   visible;
 
-        static Field new_field(string name) {
-            return Field {
-                .name = name,
-                .type = UNKNOWN,
-                .visible = true
-            };
-        } 
+    public:
+        Field(string name): name(name) {}
+        Field(string name, Type type, bool visible):
+            name(name),
+            type(type),
+            visible(visible) {}
 
         bool operator<(const Field& r) const { return name < r.name; }
         bool operator>(const Field& r) const { return name > r.name; }
         bool operator==(const Field& r) const { return name == r.name; }
         bool operator!=(const Field& r) const { return name == r.name; }
-    };
+    }; 
 
-    // abstraction for rows
-    class Record {
+    class Record : public Entity {
     private:
         vector<DataType> values;
 
