@@ -42,7 +42,59 @@ namespace entity {
 
             return id;
         }
-    
+
+        bool save(EntityID id) {
+            auto search = used_ids.find(id);
+            if (search != used_ids.end())
+                return false;
+
+            used_ids.insert(id);
+            return true;
+        }
+
+        void free(EntityID id)  {
+            auto search = used_ids.find(id);
+            if (search == used_ids.end())
+                return;        
+
+            used_ids.erase(search);
+        }
+
+        bool is_valid(EntityID id) {
+            auto search = used_ids.find(id);
+            return search != used_ids.end();
+        }
+
+        bool write_to(const string& file_name = "") {
+            if (file_name == "")        
+                return false;
+
+            ofstream file(file_name, ios::binary);
+            if (!file)
+                return false;
+
+            for (auto id: used_ids)
+                file.write(reinterpret_cast<char*>(&id), sizeof(EntityID));
+
+            return true;
+        }
+
+        bool read_from(const string& file_name = "") {
+            if (file_name == "")
+                return false;
+
+            ifstream file(file_name, ios::binary);
+            if (!file)
+                return false;
+
+            EntityID* tmp = new EntityID();
+            while (file) {
+                file.read(reinterpret_cast<char*>(tmp), sizeof(EntityID));
+                used_ids.insert(*tmp);
+            }
+
+            return true;
+        }
     };
 
     /**
