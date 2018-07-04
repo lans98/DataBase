@@ -1,5 +1,4 @@
-#ifndef SCPPDB_DATA_TYPES_HPP
-#define SCPPDB_DATA_TYPES_HPP
+#pragma once
 
 #include <string>
 #include <variant>
@@ -42,5 +41,3 @@ namespace data_types {
         UNKNOWN
     };
 }
-
-#endif

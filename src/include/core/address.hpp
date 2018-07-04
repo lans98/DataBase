@@ -1,5 +1,4 @@
-#ifndef SCPPDB_ADDRESS_HPP
-#define SCPPDB_ADDRESS_HPP
+#pragma once
 
 #include <cstring>
 #include <fstream>
@@ -34,7 +33,7 @@ namespace address {
             using_memory(false) {}
 
         Address(MemoryAddress memory_address):
-            disk_address(0UL),
+            disk_address(nullopt),
             memory_address(memory_address),
             using_memory(true) {}
 
@@ -57,6 +56,7 @@ namespace address {
             if (!exists_on_disk())
                 return nullptr;
 
+            // try to open file
             ifstream file(file_name, ios::binary);
             if (!file) 
                 return nullptr;
@@ -72,7 +72,22 @@ namespace address {
             memory_address = data;
             return memory_address;
         }
+
+        bool write(string file_name = "") {
+            if (exists_on_disk())
+                return true;
+
+            if (file_name == "")
+                return false;
+            
+            // try to open file at the end of file
+            ofstream file(file_name, ios::binary | ios::ate);
+            if (!file)
+                return false;
+
+            // write object to file
+            file.write(reinterpret_cast<char*>(memory_address), sizeof(T));
+            return true;
+        }
     };
 }
-
-#endif

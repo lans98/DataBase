@@ -1,25 +1,24 @@
-#ifndef SCPPDB_STORAGE_HPP
-#define SCPPDB_STORAGE_HPP
+#pragma once
 
-#include <record.hpp>
+#include <entity/record.hpp>
 
 namespace storage {
 
     using namespace std;
     using namespace record;
 
+    template <class T>
     class BTree {
     private:
 
     public:
 
-        // TODO
         class Iterator {
         private:
 
         public:
-            Record /*& (reference)*/ operator*() { return Record(); }
-            Record /*& (reference)*/ operator->() { return Record(); }
+            T& operator*() { /*return Record();*/ }
+            T& operator->() { /*return Record();*/ }
            
             bool operator==(const Iterator& rhs) { return false; }
             bool operator!=(const Iterator& rhs) { return false; }
@@ -38,7 +37,7 @@ namespace storage {
         Iterator last() { return Iterator(); }
 
         // TODO 
-        Iterator search(Record) { return Iterator(); }
+        Iterator search(T data) { return Iterator(); }
     };
 
     // abstraction for manipulate rows in disk
@@ -68,11 +67,9 @@ namespace storage {
             return true;
         }
 
-        BTree::Iterator begin();
-        BTree::Iterator end();
-        BTree::Iterator last();
-        BTree::Iterator search();
+        BTree<Record>::Iterator begin();
+        BTree<Record>::Iterator last();
+        BTree<Record>::Iterator end();
+        BTree<Record>::Iterator search();
     };
 }
-
-#endif

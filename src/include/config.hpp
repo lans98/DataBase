@@ -1,5 +1,4 @@
-#ifndef SCPPDB_CONFIG_HPP
-#define SCPPDB_CONFIG_HPP
+#pragma once
 
 #include <string>
 
@@ -14,5 +13,3 @@ namespace config {
     const string table_file = data_prefix + "/tables"s;
     const string index_file = data_prefix + "/indexes"s;
 }
-
-#endif

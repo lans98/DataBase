@@ -1,8 +1,7 @@
-#ifndef SCPPDB_RECORD_HPP
-#define SCPPDB_RECORD_HPP
+#pragma once
 
-#include <entity.hpp>
-#include <data_types.hpp>
+#include <core/data_types.hpp>
+#include <entity/entity.hpp>
 
 #include <string>
 #include <vector>
@@ -54,5 +53,3 @@ namespace record {
         Record(vector<DataType> vals): values(move(vals)) {}
     };
 }
-
-#endif

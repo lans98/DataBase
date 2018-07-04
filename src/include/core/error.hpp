@@ -1,5 +1,4 @@
-#ifndef SCPPDB_ERROR_HPP
-#define SCPPDB_ERROR_HPP
+#pragma once
 
 #include <iostream>
 
@@ -53,5 +52,3 @@ namespace error {
         } 
     };
 }
-
-#endif
