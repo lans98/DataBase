@@ -24,7 +24,7 @@ namespace field {
 
     public:
         Field(string name): name(name) {}
-        Field(string name, Type type, bool visible):
+        Field(string name, Type type, bool visible = true):
             name(name),
             type(type),
             visible(visible) {}

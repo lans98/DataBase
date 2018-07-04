@@ -56,7 +56,9 @@ namespace table {
 
     public:
         Table(): Entity(), name(""), pk_size(0UL), primary_key(), storage(nullptr) {}
+        Table(Table&&) = default;
         Table(const Table&) = default;
+
         Table(string name): 
             Entity(), 
             name(move(name)), 
