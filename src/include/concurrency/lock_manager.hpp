@@ -5,11 +5,17 @@
 #include <unordered_map>
 
 #include <core/data_types.hpp>
+#include <entity/entity.hpp>
+#include <entity/field.hpp>
+#include <entity/record.hpp>
 #include <entity/table.hpp>
 
 namespace lock_manager {
 
     using namespace std;
+    using namespace entity;
+    using namespace field;
+    using namespace record;
     using namespace table;
     using namespace data_types;
 
@@ -27,15 +33,14 @@ namespace lock_manager {
 
     class LockManager {
     private:
-        // TODO: it may necessary to choose another key type 
-        unordered_map<Record*, PermissionQueue> m_vars;
+        unordered_map<EntityID, PermissionQueue> m_vars;
 
     public:
         LockManager() = default;
         LockManager(const LockManager&) = delete;
 
-        bool grant_shared(Record* record, int transaction_id) {
-            PermissionQueue& deque = m_vars[record];
+        bool grant_shared(EntityID id, int transaction_id) {
+            PermissionQueue& deque = m_vars[id];
 
             // if deque is empty we can safely push a new shared permission
             // and grant it
@@ -75,8 +80,8 @@ namespace lock_manager {
             return grant_value;
         }
 
-        bool grant_exclusive(Record* record, int transaction_id) {
-            PermissionQueue& deque = m_vars[record];
+        bool grant_exclusive(EntityID id, int transaction_id) {
+            PermissionQueue& deque = m_vars[id];
 
             // if deque is empty, we can safely push a new exclusive permission
             if (deque.empty()) {
@@ -104,15 +109,15 @@ namespace lock_manager {
         }
 
         // return value shows success or failure
-        bool pop_permission(Record* record, int transaction_id) {
-            PermissionQueue& deque = m_vars[record];
+        bool pop_permission(EntityID id, int transaction_id) {
+            PermissionQueue& deque = m_vars[id];
 
             // pop the first permission found in the deque of the 
             // record in use and same transaction id
             for (auto it = deque.begin(); it != deque.end(); ++it) {
                 if (it->transaction_id == transaction_id) {
                     deque.erase(it);
-                    update_permissions(record);
+                    update_permissions(id);
                     return true;
                 }
             }
@@ -122,8 +127,8 @@ namespace lock_manager {
 
     private:
 
-        void update_permissions(Record* record) {
-            PermissionQueue& deque = m_vars[record];
+        void update_permissions(EntityID id) {
+            PermissionQueue& deque = m_vars[id];
             // if the deque is empty, early return
             // if the top permission in the deque is granted
             // then it should be either a chain of contiguous shared 
