@@ -13,7 +13,7 @@ namespace foo {
 
     public:
         Foo() = default;
-        Foo(int a, double b, bool gen = true): Entity(gen), a(a), b(b) {}
+        Foo(int a, double b): Entity(UNKNOWN, nullopt), a(a), b(b) {}
 
         friend ostream& operator<<(ostream& out, const Foo& foo) {
             out << foo.a << ' ' << foo.b;
