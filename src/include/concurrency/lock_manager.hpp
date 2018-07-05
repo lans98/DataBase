@@ -1,8 +1,8 @@
 #pragma once
 
+#include <map>
 #include <deque>
 #include <iostream>
-#include <unordered_map>
 
 #include <core/data_types.hpp>
 #include <entity/entity.hpp>
@@ -33,11 +33,16 @@ namespace lock_manager {
 
     class LockManager {
     private:
-        unordered_map<EntityID, PermissionQueue> m_vars;
+        map<EntityID, PermissionQueue> m_vars;
 
     public:
         LockManager() = default;
         LockManager(const LockManager&) = delete;
+
+        bool find(EntityID id) {
+            auto search = m_vars.find(id);
+            return search == m_vars.end();
+        }
 
         bool grant_shared(EntityID id, int transaction_id) {
             PermissionQueue& deque = m_vars[id];
