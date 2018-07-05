@@ -11,7 +11,15 @@ namespace entity {
 
     using namespace std;
 
-    using EntityID = size_t;
+    using EntityID = unsigned int;
+    
+    enum EntityType {
+        DATABASE,
+        FIELD,
+        RECORD,
+        TABLE,
+        UNKNOWN
+    };
 
     /**
      * Generate random unique ID's for each entity
