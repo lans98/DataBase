@@ -23,15 +23,30 @@ add_executable(scppdb ${SOURCES})
 # ======================================================
 # Executables test
 # ======================================================
+
+# Concurrency tests
 #add_executable(lock_manager test/lock_manager.cpp)
 
 # Address tests
 add_executable(write_address test/address/write.cpp)
 add_executable(read_address test/address/read.cpp)
+
+# Entity tests
+add_executable(field test/entity/field.cpp)
 # ======================================================
 
 # ======================================================
 # Tests
 # ======================================================
+
+# Concurrency tests
 #add_test(lock_manager_test lock_manager)
+
+# Address tests
+add_test(write_address_test write_address)
+add_test(read_address_test read_address)
+
+# Entity tests
+add_test(field_test field)
+
 # ======================================================
