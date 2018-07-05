@@ -17,8 +17,10 @@ namespace record {
         vector<DataType> values;
 
     public:
-        Record() = default;
+        Record(): Entity() {}
         Record(const Record&) = default;
-        Record(vector<DataType> vals): values(move(vals)) {}
+        Record(vector<DataType> vals, optional<EntityID> opt_id = nullopt):
+            Entity(EntityType::RECORD, opt_id),
+            values(move(vals)) {}
     };
 }

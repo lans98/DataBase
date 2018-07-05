@@ -23,8 +23,13 @@ namespace field {
         bool   visible;
 
     public:
-        Field(string name): name(name) {}
-        Field(string name, Type type, bool visible = true):
+        Field(string name, optional<EntityID> opt_id = nullopt): 
+            Entity(EntityType::FIELD, opt_id), 
+            name(name),
+            type(Type::UNKNOWN) {}
+
+        Field(string name, Type type, bool visible = true, optional<EntityID> opt_id = nullopt):
+            Entity(EntityType::FIELD, opt_id),
             name(name),
             type(type),
             visible(visible) {}

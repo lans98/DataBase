@@ -1,6 +1,6 @@
 #pragma once
 
-#include <set>
+#include <map>
 #include <string>
 #include <random>
 #include <limits>
@@ -29,10 +29,15 @@ namespace entity {
      */
     class EntityIDManager {
     private:
-        set<EntityID> used_ids;
+        map<EntityID, EntityType> used_ids;
 
         static EntityIDManager* singleton;
         EntityIDManager(): used_ids() {}
+
+        struct EntityIDType {
+            EntityID   id;
+            EntityType type;
+        };
 
     public:
         static EntityIDManager& get() {
@@ -42,7 +47,7 @@ namespace entity {
             return *singleton;
         }
 
-        EntityID generate() {
+        EntityID generate(EntityType etype) {
             random_device rand;
             mt19937_64 gen(rand());
             uniform_int_distribution<EntityID> dist(2, numeric_limits<EntityID>::max());
@@ -52,16 +57,16 @@ namespace entity {
                 id = dist(gen); 
             } while (used_ids.find(id) != used_ids.end());
 
-            used_ids.insert(id);
+            used_ids.emplace(id, etype);
             return id;
         }
 
-        bool save(EntityID id) {
+        bool save(EntityID id, EntityType etype) {
             auto search = used_ids.find(id);
             if (search != used_ids.end())
                 return false;
 
-            used_ids.insert(id);
+            used_ids.emplace(id, etype);
             return true;
         }
 
@@ -86,8 +91,12 @@ namespace entity {
             if (!file)
                 return false;
 
-            for (auto id: used_ids)
-                file.write(reinterpret_cast<char*>(&id), sizeof(EntityID));
+            EntityIDType tmp;
+            for (auto id: used_ids) {
+                tmp.id = id.first;
+                tmp.type = id.second;
+                file.write(reinterpret_cast<char*>(&tmp), sizeof(EntityIDType));
+            }
 
             return true;
         }
@@ -100,13 +109,21 @@ namespace entity {
             if (!file)
                 return false;
 
-            EntityID* tmp = new EntityID();
+            auto tmp = new EntityIDType();
             while (file) {
-                file.read(reinterpret_cast<char*>(tmp), sizeof(EntityID));
-                used_ids.insert(*tmp);
+                file.read(reinterpret_cast<char*>(tmp), sizeof(EntityIDType));
+                used_ids.emplace(tmp->id, tmp->type);
             }
 
             return true;
+        }
+
+        EntityType type_of(EntityID id) {
+            auto search = used_ids.find(id);
+            if (search == used_ids.end())
+                throw runtime_error("Not found ID");
+        
+            return search->second;
         }
     };
 
@@ -120,18 +137,18 @@ namespace entity {
      */
     class Entity {
     protected:
-        EntityID id;
+        EntityID  id;
 
     public:
-        Entity(bool gen = true): id(gen? EntityIDManager::get().generate() : 0UL) {}
-        Entity(EntityID id): id(id) { 
-            if (!EntityIDManager::get().save(id))
-                throw runtime_error("Trying to save an already used id");
+        Entity(): id(0UL) {}
+        Entity(EntityType etype, optional<EntityID> opt_id): 
+            id(opt_id.has_value()? *opt_id : EntityIDManager::get().generate(etype))
+        { 
+            if (opt_id.has_value() && !EntityIDManager::get().save(*opt_id, etype))
+                throw runtime_error("Trying to create an entity with an already used id");
         }
 
         virtual ~Entity() { EntityIDManager::get().free(id); }
-
         EntityID get_id() { return id; }        
-        void set_id(EntityID id) { this->id = id; }
     };
 }

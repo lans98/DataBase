@@ -55,19 +55,25 @@ namespace table {
         RecordStoragePtr      storage;
 
     public:
-        Table(): Entity(), name(""), pk_size(0UL), primary_key(), storage(nullptr) {}
+        Table(): 
+            Entity(), 
+            name("_temp_"), 
+            pk_size(0UL), 
+            primary_key(), 
+            storage(nullptr) {}
+
         Table(Table&&) = default;
         Table(const Table&) = default;
 
-        Table(string name): 
-            Entity(), 
+        Table(string name, optional<EntityID> opt_id = nullopt): 
+            Entity(EntityType::TABLE, opt_id), 
             name(move(name)), 
             pk_size(0UL), 
             primary_key(), 
             storage(nullptr) {}
 
-        Table(string name, const initializer_list<Field>& fields_list): 
-            Entity(), 
+        Table(string name, const initializer_list<Field>& fields_list, optional<EntityID> opt_id = nullopt): 
+            Entity(EntityType::TABLE, opt_id), 
             name(move(name)), 
             pk_size(0UL), 
             primary_key(), 
