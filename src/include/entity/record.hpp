@@ -22,5 +22,13 @@ namespace record {
         Record(vector<DataType> vals, optional<EntityID> opt_id = nullopt):
             Entity(EntityType::RECORD, opt_id),
             values(move(vals)) {}
+
+        DataType& operator[](size_t index) {
+            return values[index];
+        }
+
+        size_t size() { 
+            return values.size();
+        }
     };
 }
