@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <ostream>
 
 #include <core/data_types.hpp>
 #include <entity/entity.hpp>
@@ -47,5 +48,15 @@ namespace field {
 
         bool is_visible() { return visible; }
         void set_visible(bool visible) { this->visible = visible; }
+
+        friend ostream& debug(ostream& out, const Field& field) {
+            out << "{ name: " << field.name << ", type: " << field.type << ' ' << field.visible << " }";
+            return out;
+        }
+
+        friend ostream& operator<<(ostream& out, const Field& field) {
+            out << field.name;
+            return out;
+        }
     }; 
 }
