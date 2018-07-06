@@ -12,9 +12,9 @@ int main() {
     Field address("address", STRING);
     Field salary("salary", UINT);
 
-    debug(cerr, first_name);
-    debug(cerr, last_name);
-    debug(cerr, phone_num);
-    debug(cerr, address);
-    debug(cerr, salary);
+    debug(cerr, first_name) << '\n';
+    debug(cerr, last_name)  << '\n';
+    debug(cerr, phone_num)  << '\n';
+    debug(cerr, address)    << '\n';
+    debug(cerr, salary)     << '\n';
 }
