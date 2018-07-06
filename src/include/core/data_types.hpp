@@ -15,6 +15,11 @@
         }\
     }\
 
+#define define_case_strify(var, type)\
+    case type: \
+        var = #type;\
+        break;\
+
 namespace data_types {
 
     using namespace std;
@@ -37,8 +42,10 @@ namespace data_types {
     };
 
     class DataType {
-    public:
-        using TypeWrapper = variant<
+    private:
+
+        using TypeWrapper = variant
+        <
             short, 
             unsigned int, 
             unsigned long, 
@@ -51,7 +58,6 @@ namespace data_types {
             // agreggate new types starting here
         >;
 
-    private:
         TypeWrapper data;
 
     public:
@@ -59,15 +65,15 @@ namespace data_types {
         DataType(TypeWrapper data): data(move(data)) {}
         DataType(const DataType&) = default;
 
-        define_getter(get_short, short, SHORT)
-        define_getter(get_uint, unsigned int, UINT)
-        define_getter(get_ulong, unsigned long, ULONG)
-        define_getter(get_double, double, DOUBLE)
-        define_getter(get_int, int, INT)
-        define_getter(get_long, long, LONG)
-        define_getter(get_string, string, STRING)
-        define_getter(get_bool, bool, BOOL)
-        define_getter(get_char, char, CHAR)
+        define_getter(get_short  , short         , Type::SHORT  )
+        define_getter(get_uint   , unsigned int  , Type::UINT   )
+        define_getter(get_ulong  , unsigned long , Type::ULONG  )
+        define_getter(get_double , double        , Type::DOUBLE )
+        define_getter(get_int    , int           , Type::INT    )
+        define_getter(get_long   , long          , Type::LONG   )
+        define_getter(get_string , string        , Type::STRING )
+        define_getter(get_bool   , bool          , Type::BOOL   )
+        define_getter(get_char   , char          , Type::CHAR   )
     };
 
 
