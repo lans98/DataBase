@@ -50,7 +50,21 @@ namespace field {
         void set_visible(bool visible) { this->visible = visible; }
 
         friend ostream& debug(ostream& out, const Field& field) {
-            out << "{ name: " << field.name << ", type: " << field.type << ' ' << field.visible << " }";
+            string type;
+            switch (field.type) {
+                define_case_strify(type, Type::SHORT   )
+                define_case_strify(type, Type::UINT    )
+                define_case_strify(type, Type::ULONG   )
+                define_case_strify(type, Type::DOUBLE  )
+                define_case_strify(type, Type::INT     )
+                define_case_strify(type, Type::LONG    )
+                define_case_strify(type, Type::STRING  )
+                define_case_strify(type, Type::BOOL    )
+                define_case_strify(type, Type::CHAR    )
+                define_case_strify(type, Type::UNKNOWN )
+            }
+
+            out << "Field { name: " << field.name << ", type: " << type << ", visible: " << boolalpha << field.visible << " }";
             return out;
         }
 
