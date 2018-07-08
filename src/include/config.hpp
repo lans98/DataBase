@@ -11,5 +11,6 @@ namespace config {
 
     // Filenames 
     const string table_file = data_prefix + "/tables"s;
-    const string index_file = data_prefix + "/indexes"s;
+    const string btree_file = data_prefix + "/btree"s;
+    const string entity_ids_file = data_prefix + "/eids"s;
 }
