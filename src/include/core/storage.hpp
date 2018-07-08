@@ -1,5 +1,6 @@
 #pragma once
 
+#include <config.hpp>
 #include <core/address.hpp>
 #include <entity/record.hpp>
 
@@ -8,6 +9,7 @@ namespace storage {
     using namespace std;
     using namespace address;
     using namespace record;
+    using namespace config;
 
     template <class T, size_t N>
     class BTree {
@@ -15,6 +17,10 @@ namespace storage {
 
         struct Node;
             
+        /**
+         * Address type is just like a pointer type, 
+         * but it also stores an address to disk
+         */
         struct Page {
             array<T, N>             page;
             array<Address<Node>, N> childs;
