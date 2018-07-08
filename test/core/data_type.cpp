@@ -22,4 +22,6 @@ int main() {
     *a_value = 8;
 
     cerr << *a_value << '\n';
+    auto after = a.get_int();
+    cerr << *after << '\n';
 }
