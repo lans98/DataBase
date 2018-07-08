@@ -1,15 +1,28 @@
 #pragma once
 
+#include <core/address.hpp>
 #include <entity/record.hpp>
 
 namespace storage {
 
     using namespace std;
+    using namespace address;
     using namespace record;
 
-    template <class T>
+    template <class T, size_t N>
     class BTree {
     private:
+
+        struct Node;
+            
+        struct Page {
+            array<T, N>             page;
+            array<Address<Node>, N> childs;
+        };
+
+        struct Node {
+            Page page;
+        };
 
     public:
 
