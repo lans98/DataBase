@@ -13,7 +13,7 @@ namespace extra {
     inline void hash_combine(size_t seed) { }
 
     template <class T, class... Rest>
-    inline void hash_combine(size_t seed, const T& t, Rest... rest) {
+    inline void hash_combine(size_t& seed, const T& t, Rest... rest) {
         hash<T> hasher;
         seed ^= hasher(t) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
         hash_combine(seed, rest...);
