@@ -36,6 +36,7 @@ add_executable(field test/entity/field.cpp)
 
 # Core tests
 add_executable(data_type test/core/data_type.cpp)
+add_executable(hash_combine test/core/hashing.cpp)
 # ======================================================
 
 # ======================================================
@@ -54,5 +55,5 @@ add_test(field_test field)
 
 # Core tests
 add_test(data_type_test data_type)
-
+add_test(hash_combine_test hash_combine)
 # ======================================================
