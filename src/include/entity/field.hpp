@@ -24,13 +24,13 @@ namespace field {
         bool   visible;
 
     public:
-        Field(string name, optional<EntityID> opt_id = nullopt): 
-            Entity(EntityType::FIELD, opt_id), 
+        Field(string name, optional<EntityID> opt_parent = nullopt, optional<EntityID> opt_id = nullopt): 
+            Entity(EntityType::FIELD, opt_id, opt_parent), 
             name(name),
             type(Type::UNKNOWN) {}
 
-        Field(string name, Type type, bool visible = true, optional<EntityID> opt_id = nullopt):
-            Entity(EntityType::FIELD, opt_id),
+        Field(string name, Type type, bool visible, optional<EntityID> opt_parent = nullopt, optional<EntityID> opt_id = nullopt):
+            Entity(EntityType::FIELD, opt_id, opt_parent),
             name(name),
             type(type),
             visible(visible) {}
