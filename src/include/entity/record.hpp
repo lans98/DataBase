@@ -19,8 +19,8 @@ namespace record {
     public:
         Record(): Entity() {}
         Record(const Record&) = default;
-        Record(vector<DataType> vals, optional<EntityID> opt_id = nullopt):
-            Entity(EntityType::RECORD, opt_id),
+        Record(vector<DataType> vals, optional<EntityID> opt_id = nullopt, optional<EntityID> opt_parent = nullopt):
+            Entity(EntityType::RECORD, opt_id, opt_parent),
             values(move(vals)) {}
 
         DataType& operator[](size_t index) {
