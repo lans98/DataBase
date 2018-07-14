@@ -1,16 +1,54 @@
 #pragma once
 
 #include <string>
+#include <iostream>
+#include <cpptoml.h>
 
 namespace config {
     using namespace std;
-    using namespace std::literals::string_literals;
+    using namespace cpptoml;
 
-    // Main prefix where needed data will be saved
-    const string data_prefix = ".scppdb"s;
+    class Config {
+    private:
+        shared_ptr<cpptoml::table> config;
 
-    // Filenames 
-    const string table_file = data_prefix + "/tables"s;
-    const string btree_file = data_prefix + "/btree"s;
-    const string entity_ids_file = data_prefix + "/eids"s;
+        static Config* instance;
+
+        Config(const string& config_file) {
+            try {
+                config = parse_file(config_file);
+            } catch (const exception& e) {
+                cerr << e.what() << '\n';
+                throw e;
+            }
+        }
+
+    public:
+        static void load_config(const string& name) {
+            delete instance;
+            instance = new Config(name);
+        }
+
+        static Config& get_instance() {
+            if (!instance)
+                throw runtime_error("Please load a config file first");
+
+            return *instance;
+        }
+
+        template <class T> 
+        optional<T> get_as(const string& id) {
+            auto dot = id.find(".");
+            if (dot == string::npos) {
+                auto val = config->get_as<T>(id);
+                return val? optional<T>(*val) : nullopt;
+            } else {
+                auto val = config->get_qualified_as<T>(id);
+                return val? optional<T>(*val) : nullopt;
+            }
+        }
+    };
+
+    Config* Config::instance = nullptr;
+    using ConfigInstance = Config&;
 }
