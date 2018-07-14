@@ -65,15 +65,15 @@ namespace table {
         Table(Table&&) = default;
         Table(const Table&) = default;
 
-        Table(string name, optional<EntityID> opt_id = nullopt): 
-            Entity(EntityType::TABLE, opt_id), 
+        Table(string name, optional<EntityID> opt_parent = nullopt, optional<EntityID> opt_id = nullopt): 
+            Entity(EntityType::TABLE, opt_id, opt_parent), 
             name(move(name)), 
             pk_size(0UL), 
             primary_key(), 
             storage(nullptr) {}
 
-        Table(string name, const initializer_list<Field>& fields_list, optional<EntityID> opt_id = nullopt): 
-            Entity(EntityType::TABLE, opt_id), 
+        Table(string name, const initializer_list<Field>& fields_list, optional<EntityID> opt_parent = nullopt, optional<EntityID> opt_id = nullopt): 
+            Entity(EntityType::TABLE, opt_id, opt_parent), 
             name(move(name)), 
             pk_size(0UL), 
             primary_key(), 
