@@ -7,7 +7,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include_directories(src/include)
 include_directories(test)
-include_directories(dependencies/json)
+include_directories(dependencies/toml)
 
 # ======================================================
 # Source
