@@ -7,6 +7,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include_directories(src/include)
 include_directories(test)
+include_directories(dependencies/json)
 
 # ======================================================
 # Source
@@ -33,10 +34,10 @@ add_executable(read_address test/address/read.cpp)
 
 # Entity tests
 add_executable(field test/entity/field.cpp)
+add_executable(record test/entity/record.cpp)
 
 # Core tests
 add_executable(data_type test/core/data_type.cpp)
-add_executable(hash_combine test/core/hashing.cpp)
 # ======================================================
 
 # ======================================================
@@ -52,8 +53,8 @@ add_test(read_address_test read_address)
 
 # Entity tests
 add_test(field_test field)
+add_test(record_test record)
 
 # Core tests
 add_test(data_type_test data_type)
-add_test(hash_combine_test hash_combine)
 # ======================================================
