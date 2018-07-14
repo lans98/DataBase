@@ -38,6 +38,9 @@ add_executable(record test/entity/record.cpp)
 
 # Core tests
 add_executable(data_type test/core/data_type.cpp)
+
+# Config test
+add_executable(config test/config.cpp)
 # ======================================================
 
 # ======================================================
@@ -57,4 +60,7 @@ add_test(record_test record)
 
 # Core tests
 add_test(data_type_test data_type)
+
+# Config test
+add_test(config_test config)
 # ======================================================

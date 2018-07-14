@@ -1,0 +1,9 @@
+[core]
+db_id = 1 # NEVER change this
+
+[files]
+prefix = ".scppdb"
+table_file = "tables"
+btree_file = "btree"
+entity_ids_file = "ent_ids"
+
