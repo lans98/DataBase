@@ -152,5 +152,6 @@ namespace entity {
 
         virtual ~Entity() { EntityIDManager::get().free(id); }
         EntityID get_id() { return id; }        
+        bool has_parent() { return parent; }
     };
 }
