@@ -31,6 +31,10 @@ namespace database {
             return it->second;
         }
 
+        void load_tables(const string& file) {
+        
+        }
+
         void create_table(const Table& table) {
             auto it = tables.find(table.get_name());
             if (it != tables.end())
