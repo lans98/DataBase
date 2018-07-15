@@ -148,7 +148,7 @@ namespace entity {
         }
     };
 
-    EntityIDManager* EntityIDManager::singleton = nullptr;
+    EntityIDManager* EntityIDManager::instance = nullptr;
     using EntityIDManagerInstance = EntityIDManager&;
 
     /**
