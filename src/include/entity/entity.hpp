@@ -53,7 +53,7 @@ namespace entity {
             return *instance;
         }
 
-        EntityID generate(EntityType etype) {
+        EntityID generate(EntityID parent_id, EntityType type) {
             random_device rand;
             mt19937_64 gen(rand());
             uniform_int_distribution<EntityID> dist(2, numeric_limits<EntityID>::max());
@@ -63,19 +63,19 @@ namespace entity {
                 id = dist(gen); 
             } while (used_ids.find(id) != used_ids.end());
 
-            used_ids.emplace(id, etype);
+            used_ids.emplace(id, EntityInfo { .parent = parent_id, .idtype = type });
             return id;
         }
 
-        bool save(EntityID id, EntityType etype) {
+        bool save(EntityID id, EntityID parent_id, EntityType type) {
             auto search = used_ids.find(id);
             if (search != used_ids.end())
                 return false;
 
-            used_ids.emplace(id, etype);
+            used_ids.emplace(id, EntityInfo { .parent = parent_id, .idtype = type });
             return true;
         }
-
+        
         void free(EntityID id)  {
             auto search = used_ids.find(id);
             if (search == used_ids.end())
