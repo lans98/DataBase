@@ -29,22 +29,28 @@ namespace entity {
      */
     class EntityIDManager {
     private:
-        map<EntityID, EntityType> used_ids;
-
-        static EntityIDManager* singleton;
-        EntityIDManager(): used_ids() {}
-
-        struct EntityIDType {
-            EntityID   id;
-            EntityType type;
+        struct EntityInfo { 
+            EntityID   parent;
+            EntityType idtype;
         };
+
+        struct DiskCell {
+            EntityID id;
+            EntityID parent;
+            EntityType idtype;
+        };
+
+        map<EntityID, EntityInfo> used_ids;
+
+        static EntityIDManager* instance;
+        EntityIDManager(): used_ids() {}
 
     public:
         static EntityIDManager& get_instance() {
-            if (!singleton)
-                singleton = new EntityIDManager();
+            if (!instance)
+                instance = new EntityIDManager();
 
-            return *singleton;
+            return *instance;
         }
 
         EntityID generate(EntityType etype) {
