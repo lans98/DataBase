@@ -83,7 +83,7 @@ namespace entity {
             return search != used_ids.end();
         }
 
-        bool write_to(const string& file_name = "") {
+        bool save_ids(const string& file_name = "") {
             if (file_name == "")        
                 return false;
 
@@ -101,7 +101,7 @@ namespace entity {
             return true;
         }
 
-        bool read_from(const string& file_name = "") {
+        bool load_ids(const string& file_name = "") {
             if (file_name == "")
                 return false;
 
