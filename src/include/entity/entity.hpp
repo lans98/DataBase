@@ -159,21 +159,18 @@ namespace entity {
      */
     class Entity {
     protected:
-        EntityID  id;
-        EntityID  parent;
+        EntityID id;
 
     public:
-        Entity(): id(0U), parent(0U) {}
-        Entity(EntityType etype, optional<EntityID> opt_id, optional<EntityID> opt_parent): 
-            id(opt_id.value_or(EntityIDManager::get_instance().generate(etype))),
-            parent(opt_parent.value_or(0U))
+        Entity(): id(0U) {}
+        Entity(EntityType type, optional<EntityID> opt_id, optional<EntityID> opt_parent): 
+            id(opt_id.value_or(EntityIDManager::get_instance().generate(opt_parent.value_or(0U), type))),
         { 
-            if (opt_id.has_value() && !EntityIDManager::get_instance().save(*opt_id, etype))
+            if (opt_id.has_value() && !EntityIDManager::get_instance().save(*opt_id, opt_parent.value_or(0U), type))
                 throw runtime_error("Trying to create an entity with an already used id");
         }
 
         virtual ~Entity() { EntityIDManager::get_instance().free(id); }
         EntityID get_id() { return id; }        
-        bool has_parent() { return parent; }
     };
 }
