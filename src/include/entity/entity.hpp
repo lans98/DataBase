@@ -164,7 +164,7 @@ namespace entity {
     public:
         Entity(): id(0U) {}
         Entity(EntityType type, optional<EntityID> opt_id, optional<EntityID> opt_parent): 
-            id(opt_id.value_or(EntityIDManager::get_instance().generate(opt_parent.value_or(0U), type))),
+            id(opt_id.value_or(EntityIDManager::get_instance().generate(opt_parent.value_or(0U), type)))
         { 
             if (opt_id.has_value() && !EntityIDManager::get_instance().save(*opt_id, opt_parent.value_or(0U), type))
                 throw runtime_error("Trying to create an entity with an already used id");
