@@ -37,12 +37,7 @@ namespace table {
     class Table : public Entity {
     public:
         using PrimaryKey = vector<string>;
-        using RecordStoragePtr = unique_ptr<RecordStorage>;
-
-        struct OperationResult {
-            optional<Table> table;
-            optional<Error> error;
-        };
+        using RecordStoragePtr = shared_ptr<RecordStorage>;
 
     private:
         friend class Record;
@@ -96,17 +91,18 @@ namespace table {
             return nullopt;
         }
 
-        [[nodiscard]] // You shouldn't discard this return value
-        OperationResult projection(vector<Field> sel_fields) {
+        string get_name() const { return name; }
+
+        Table projection(vector<Field> sel_fields) {
             // Simple cases where we don't return a result, just an error
             if (!storage)
-                return { nullopt, Error(ErrorKind::NULL_STORAGE, "The storage doesn't exist for this table") };
+                throw runtime_error("The storage doesn't exist for this table");
 
             if (storage->is_empty()) 
-                return { nullopt, Error(ErrorKind::EMPTY_STORAGE, "The storage exists but it's empty for this table") };
+                throw runtime_error("The storage exists but it's empty for this table");
 
             if (fields.size() < sel_fields.size())
-                return { nullopt, Error(ErrorKind::INCORRECT_PARAMS, "The vector of fields is bigger than the actual table fields size") };
+                throw runtime_error("The vector of fields is bigger than the actual table fields size");
 
             // Three conditions that also need to be checked
             bool both_are_the_same;
@@ -142,10 +138,11 @@ namespace table {
 
             // handle results 
             if (!sel_fields_is_valid)
-                return { nullopt, Error(ErrorKind::INCORRECT_PARAMS, "Some selected fields are invalid for this table") };
+                throw runtime_error("Some selected fields are invalid for this table");
 
+            // Nothing to query
             if (both_are_the_same)
-                return { *this, nullopt };
+                return *this;
 
             // Above conditions passed so we can finally create an empty table 
             // that will hold the result
@@ -169,7 +166,7 @@ namespace table {
                     vals.reserve(sel_fields.size());
 
                 if (step_counter) {
-                    vals.push_back(auto_counter);
+                    vals.push_back(DataType(auto_counter));
                     auto_counter += step_counter;
                 }
 
@@ -189,7 +186,7 @@ namespace table {
                 result.set_primary_key(pk);
             }
 
-            return { result, nullopt }
+            return result;
         }
     };
 

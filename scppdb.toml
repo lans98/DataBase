@@ -1,9 +1,9 @@
 [core]
-db_id = 1 # NEVER change this
+page_size = 1024
 
 [files]
 prefix = ".scppdb"
 table_file = "tables"
-btree_file = "btree"
+btrees_file = "btrees"
 entity_ids_file = "ent_ids"
 
