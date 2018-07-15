@@ -37,12 +37,7 @@ namespace table {
     class Table : public Entity {
     public:
         using PrimaryKey = vector<string>;
-        using RecordStoragePtr = unique_ptr<RecordStorage>;
-
-        struct OperationResult {
-            optional<Table> table;
-            optional<Error> error;
-        };
+        using RecordStoragePtr = shared_ptr<RecordStorage>;
 
     private:
         friend class Record;
