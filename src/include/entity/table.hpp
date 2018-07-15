@@ -96,6 +96,8 @@ namespace table {
             return nullopt;
         }
 
+        string get_name() const { return name; }
+
         [[nodiscard]] // You shouldn't discard this return value
         OperationResult projection(vector<Field> sel_fields) {
             // Simple cases where we don't return a result, just an error
