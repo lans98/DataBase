@@ -133,7 +133,18 @@ namespace entity {
             if (search == used_ids.end())
                 throw runtime_error("Not found ID");
         
-            return search->second;
+            return search->second.idtype;
+        }
+
+        EntityID parent_of(EntityID id) {
+            if (id == 0U)
+                return 0U;
+
+            auto search = used_ids.find(id);
+            if (search == used_ids.end())
+                throw runtime_error("Not found ID");
+
+            return search->second.parent;
         }
     };
 
