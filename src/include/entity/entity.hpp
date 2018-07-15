@@ -97,11 +97,12 @@ namespace entity {
             if (!file)
                 return false;
 
-            EntityIDType tmp;
+            DiskCell tmp;
             for (auto id: used_ids) {
                 tmp.id = id.first;
-                tmp.type = id.second;
-                file.write(reinterpret_cast<char*>(&tmp), sizeof(EntityIDType));
+                tmp.parent = id.second.parent;
+                tmp.idtype = id.second.idtype;
+                file.write(reinterpret_cast<char*>(&tmp), sizeof(DiskCell));
             }
 
             return true;
@@ -115,10 +116,10 @@ namespace entity {
             if (!file)
                 return false;
 
-            auto tmp = new EntityIDType();
+            auto tmp = new DiskCell();
             while (file) {
-                file.read(reinterpret_cast<char*>(tmp), sizeof(EntityIDType));
-                used_ids.emplace(tmp->id, tmp->type);
+                file.read(reinterpret_cast<char*>(tmp), sizeof(DiskCell));
+                used_ids.emplace(tmp->id, EntityInfo { .parent = tmp->parent, .idtype = tmp->idtype });
             }
 
             return true;
