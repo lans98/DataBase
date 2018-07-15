@@ -80,13 +80,11 @@ namespace lock_manager {
 
             Permission permission;
 
-            bool grant_value;
-
             // Check if the top permission on the deque is exclusive and granted
-            // if it's true, we can push a new shared permission but we can grant 
+            // if it's true, we can push a new shared permission but we can't grant 
             // it, so we return false 
             permission = deque[0];
-            grant_value = !(permission.type == Permission::EXCLUSIVE && permission.granted);
+            grant_value = grant_value && !(permission.type == Permission::EXCLUSIVE && permission.granted);
 
             // Check if the last permission on the deque is shared and granted
             // if it's true depends on the result of the above condition
