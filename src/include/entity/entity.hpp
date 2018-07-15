@@ -40,7 +40,7 @@ namespace entity {
         };
 
     public:
-        static EntityIDManager& get() {
+        static EntityIDManager& get_instance() {
             if (!singleton)
                 singleton = new EntityIDManager();
 
@@ -131,6 +131,7 @@ namespace entity {
     };
 
     EntityIDManager* EntityIDManager::singleton = nullptr;
+    using EntityIDManagerInstance = EntityIDManager&;
 
     /**
      * Entity class used to identify different
@@ -146,14 +147,14 @@ namespace entity {
     public:
         Entity(): id(0U), parent(0U) {}
         Entity(EntityType etype, optional<EntityID> opt_id, optional<EntityID> opt_parent): 
-            id(opt_id.has_value()? *opt_id : EntityIDManager::get().generate(etype)),
-            parent(opt_parent.has_value()? *opt_parent : 0U)
+            id(opt_id.value_or(EntityIDManager::get_instance().generate(etype))),
+            parent(opt_parent.value_or(0U))
         { 
-            if (opt_id.has_value() && !EntityIDManager::get().save(*opt_id, etype))
+            if (opt_id.has_value() && !EntityIDManager::get_instance().save(*opt_id, etype))
                 throw runtime_error("Trying to create an entity with an already used id");
         }
 
-        virtual ~Entity() { EntityIDManager::get().free(id); }
+        virtual ~Entity() { EntityIDManager::get_instance().free(id); }
         EntityID get_id() { return id; }        
         bool has_parent() { return parent; }
     };
