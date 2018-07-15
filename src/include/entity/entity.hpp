@@ -119,6 +119,9 @@ namespace entity {
         }
 
         EntityType type_of(EntityID id) {
+            if (id == 0U) 
+                return EntityType::UNKNOWN;
+
             auto search = used_ids.find(id);
             if (search == used_ids.end())
                 throw runtime_error("Not found ID");
