@@ -166,7 +166,7 @@ namespace table {
                     vals.reserve(sel_fields.size());
 
                 if (step_counter) {
-                    vals.push_back(auto_counter);
+                    vals.push_back(DataType(auto_counter));
                     auto_counter += step_counter;
                 }
 
