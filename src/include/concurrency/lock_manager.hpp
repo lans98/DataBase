@@ -103,17 +103,37 @@ namespace lock_manager {
         }
 
         bool grant_exclusive(EntityID id, int transaction_id) {
+            EntityIDManagerInstance id_manager = EntityIDManager::get_instance();       
+
             PermissionQueue& deque = m_vars[id];
+
+            // Check if there is lock on parent of id
+            EntityID parent = id_manager.parent_of(id);
+            bool id_is_database = parent == 0U && id_manager.type_of(id) == EntityType::DATABASE;
+            bool grant_value = true;
+            if (!id_is_database) {
+                if (parent == 0U) {
+                    throw runtime_error("This Entity needs to have a parent!");
+                } else {
+                    auto search = m_vars.find(parent);
+                    if (search != m_vars.end()) {
+                        auto& parent_deque = search->second;
+                        if (parent_deque[0].type == Permission::EXCLUSIVE || parent_deque[0].type == Permission::SHARED)
+                            grant_value = false;
+                    }
+                }
+            } 
+
 
             // if deque is empty, we can safely push a new exclusive permission
             if (deque.empty()) {
                 deque.push_back(Permission{
                     .type = Permission::EXCLUSIVE,
-                    .granted = true,
+                    .granted = grant_value,
                     .transaction_id = transaction_id
                 });
 
-                return true;
+                return grant_value;
             }
 
             // in the other case, the deque isn't empty then there is 
