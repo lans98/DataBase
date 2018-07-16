@@ -64,7 +64,7 @@ namespace lock_manager {
                             grant_value = false;
                     }
                 }
-            } 
+            }  
 
             // if deque is empty we can safely push a new shared permission
             // and grant it
@@ -105,7 +105,7 @@ namespace lock_manager {
         bool grant_exclusive(EntityID id, int transaction_id) {
             EntityIDManagerInstance id_manager = EntityIDManager::get_instance();       
 
-            PermissionQueue& deque = m_vars[id];
+            PermissionDeque& deque = m_vars[id];
 
             // Check if there is lock on parent of id
             EntityID parent = id_manager.parent_of(id);
@@ -152,7 +152,7 @@ namespace lock_manager {
 
         // return value shows success or failure
         bool pop_permission(EntityID id, int transaction_id) {
-            PermissionQueue& deque = m_vars[id];
+            PermissionDeque& deque = m_vars[id];
 
             // pop the first permission found in the deque of the 
             // record in use and same transaction id
@@ -169,8 +169,50 @@ namespace lock_manager {
 
     private:
 
+        TableEntityMap::iterator find_table(EntityID id) {
+            table_map[id];
+            return table_map.find(id);
+        }
+
+        BasicEntityMap::iterator find_basic(EntityID id) {
+            EntityIDManagerInstance id_manager = EntityIDManager::get_instance();
+
+            auto basic_map = get<1>(table_map[id_manager.parent_of(id)]);
+            basic_map[id];
+            return basic_map.find(id);
+        }
+
+        bool check_deque(const PermissionDeque& deque, const function<bool (Permission::Type)>& predicate) {
+            if (deque.empty()) return false;
+                                                         
+            Permission top = deque[0];
+            return (predicate(top.type) && top.granted);
+        }
+
+        bool is_locked(EntityID id, EntityType type, const function<bool (Permission::Type)>& predicate) {
+            switch (type) {
+                case EntityType::FIELD:
+                case EntityType::RECORD: {
+                    PermissionDeque& deque = find_basic(id)->second;
+                    return check_deque(deque, predicate);
+                }
+
+                case EntityType::TABLE: {
+                    PermissionDeque& deque = get<0>(find_table(id)->second);
+                    return check_deque(deque, predicate);
+                }
+
+                case EntityType::DATABASE: {
+                    return check_deque(db_pdeque, predicate);
+                }
+
+                default:
+                    throw runtime_error("This Entity needs to have a type");
+            }
+        }
+
         void update_permissions(EntityID id) {
-            PermissionQueue& deque = m_vars[id];
+            PermissionDeque& deque = m_vars[id];
             // if the deque is empty, early return
             // if the top permission in the deque is granted
             // then it should be either a chain of contiguous shared 
