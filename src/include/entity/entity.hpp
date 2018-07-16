@@ -168,6 +168,28 @@ namespace entity {
         { 
             if (opt_id.has_value() && !EntityIDManager::get_instance().save(*opt_id, opt_parent.value_or(0U), type))
                 throw runtime_error("Trying to create an entity with an already used id");
+
+            if (!opt_parent.has_value())
+                return;
+
+            EntityIDManagerInstance id_manager = EntityIDManager::get_instance();
+            switch (type) {
+                case EntityType::FIELD:
+                    if (id_manager.type_of(*opt_parent) != EntityType::TABLE)
+                        throw runtime_error("This entity type is Field, but its parent isn't a Table");
+                case EntityType::RECORD:
+                    if (id_manager.type_of(*opt_parent) != EntityType::TABLE)
+                        throw runtime_error("This entity type is Record, but its parent isn't a Table");
+                case EntityType::TABLE:
+                    if (id_manager.type_of(*opt_parent) != EntityType::DATABASE)
+                        throw runtime_error("This entity type is Table, but its parent isn't the DataBase");
+                case EntityType::DATABASE:
+                    if (id_manager.type_of(*opt_parent) != EntityType::UNKNOWN)
+                        throw runtime_error("This entity type is DataBase, but it has an associated known parent");
+                case EntityType::UNKNOWN:
+                    if (id_manager.type_of(*opt_parent) != EntityType::UNKNOWN)
+                        throw runtime_error("This entity type is Unknown, but it has an associated known parent");
+            }
         }
 
         virtual ~Entity() { EntityIDManager::get_instance().free(id); }
