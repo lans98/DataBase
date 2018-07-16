@@ -11,9 +11,18 @@ namespace storage {
     using namespace record;
     using namespace config;
 
-    template <class T, size_t N>
+    template <class T, class Cmp = less<T>>
     class BTree {
     private:
+
+        struct Eq {
+            Cmp cmp;
+
+            bool operator()(const T& l, const T& r) {
+                return !(comp(l, r) || comp(r, l));
+            }
+        };
+
 
         struct Node;
             
