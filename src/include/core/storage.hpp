@@ -74,13 +74,22 @@ namespace storage {
 
             Node(size_t page_size): page(page_size) {}
 
+            bool is_leaf() {
+                for (auto& node: page.childs)
+                    if (node.exists_on_disk() || node.exists_on_memory())
+                        return false;
+                return true;
+            }
+
             void insert(const T& data, size_t page_size) {
+                auto search = page.search(data);
+                auto& found = search.found;
+                auto& index = search.index;
+
                 if (page.page.size() < page_size) {
-                    size_t index = page.search(data);
                     page.shift(page.page, index);
                     page.shift(page.childs, index);
                     page.page[index] = data;
-
                 } else {
                 }
             }
