@@ -3,6 +3,7 @@
 #include <map>
 #include <deque>
 #include <iostream>
+#include <functional>
 
 #include <core/data_types.hpp>
 #include <entity/entity.hpp>
@@ -29,25 +30,99 @@ namespace lock_manager {
         int  transaction_id;
     };
 
-    using PermissionQueue = deque<Permission>;
+    using PermissionDeque = deque<Permission>;
 
     class LockManager {
     private:
-        map<EntityID, PermissionQueue> m_vars;
+        using BasicEntityMap = map<EntityID, PermissionDeque>;
+        using TableEntityMap = map<EntityID, tuple<PermissionDeque, BasicEntityMap>>;
+
+        TableEntityMap  table_map;
+        PermissionDeque db_pdeque;
 
     public:
         LockManager() = default;
         LockManager(const LockManager&) = delete;
 
-        bool find(EntityID id) {
-            auto search = m_vars.find(id);
-            return search == m_vars.end();
-        }
-
         bool grant_shared(EntityID id, int transaction_id) {
             EntityIDManagerInstance id_manager = EntityIDManager::get_instance();       
+            EntityType type = id_manager.type_of(id);
 
-            PermissionQueue& deque = m_vars[id];
+            bool grant_value = true;
+            switch (type) {
+                case EntityType::FIELD:
+                case EntityType::RECORD: {
+                    bool exclusive_locked = is_locked(id, type, [](auto ptype) -> bool { 
+                        return ptype == Permission::EXCLUSIVE;
+                    });
+
+                    grant_value = grant_value && !exclusive_locked;
+
+                    bool parent_xlocked = is_locked(id_manager.parent_of(id), EntityType::TABLE, [](auto ptype) -> bool {
+                       return ptype == Permission::EXCLUSIVE;     
+                    });
+
+                    grant_value = grant_value && !parent_xlocked;
+
+                    PermissionDeque& deque = find_basic(id)->second;
+                    deque.push_back(Permission {
+                        .type = Permission::SHARED,
+                        .granted = grant_value,
+                        .transaction_id = transaction_id
+                    });
+                }
+
+                case EntityType::TABLE: {
+                    bool exclusive_locked = is_locked(id, type, [](auto ptype) -> bool {
+                        return ptype == Permission::EXCLUSIVE;
+                    });
+
+                    grant_value = grant_value && !exclusive_locked;
+
+                    bool parent_xlocked = is_locked(EntityID(1U), EntityType::DATABASE, [](auto ptype) -> bool {
+                        return ptype == Permission::EXCLUSIVE;
+                    });
+
+                    grant_value = grant_value && !parent_xlocked;
+                    BasicEntityMap& childs = get<1>(find_table(id)->second);
+                    for (auto& [eid, dq] : childs) {
+                        if (!check_deque(dq, [](auto ptype) -> bool { 
+                            return ptype == Permission::EXCLUSIVE || ptype == Permission::SHARED; 
+                        })) {
+                            grant_value = false;
+                            break;
+                        }
+                    }
+
+                    PermissionDeque& deque = get<0>(find_table(id)->second);
+                    deque.push_back(Permission {
+                        .type = Permission::SHARED,
+                        .granted = grant_value,
+                        .transaction_id = transaction_id
+                    });
+                }
+
+                case EntityType::DATABASE: {
+                    bool exclusive_locked = is_locked(id, type, [](auto ptype) -> bool {
+                        return ptype == Permission::EXCLUSIVE;
+                    });
+
+                    grant_value = grant_value && !exclusive_locked;
+
+
+                    PermissionDeque& deque = db_pdeque;
+                    deque.push_back(Permission {
+                       .type = Permission::SHARED,
+                       .granted = grant_value,
+                       .transaction_id = transaction_id
+                    });
+                }
+
+                default:
+                    throw runtime_error("This Entity needs to have a type");
+            }
+
+            PermissionDeque& deque = m_vars[id];
 
             // Check if there is lock on parent of id
             EntityID parent = id_manager.parent_of(id);
