@@ -1,4 +1,4 @@
-//Basado en implementación de Md. Ashraful Islam Emon
+//Basado en implementación de Ashraful Islam
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
