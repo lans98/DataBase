@@ -51,9 +51,9 @@ namespace lock_manager {
 
             // Check if there is lock on parent of id
             EntityID parent = id_manager.parent_of(id);
-            bool is_database = parent == 0U && id_manager.type_of(id) == EntityType::DATABASE;
+            bool id_is_database = parent == 0U && id_manager.type_of(id) == EntityType::DATABASE;
             bool grant_value = true;
-            if (!is_database) {
+            if (!id_is_database) {
                 if (parent == 0U) {
                     throw runtime_error("This Entity needs to have a parent!");
                 } else {
