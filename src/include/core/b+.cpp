@@ -3,8 +3,11 @@
 #include <cstdlib>
 #include <vector>
 #include <queue>
+#include "address.hpp"
 using namespace std;
-using type_key = size_t;
+using namespace address;
+using type_key = size_t; //hash es un size_t
+using type_reg = Address<int>;
 int nVal;
 int nPointer;//P1 P2... Pn , n=nPointer
 struct node {
@@ -13,7 +16,7 @@ struct node {
     node *par;//parent
     vector<type_key> value;
     vector<node*> child;
-    vector<size_t> regs; // si es hoja se usa este y no child. regs = vector de las posiciones de los registros
+    vector<type_reg> regs; // si es hoja se usa este y no child. regs = vector de las posiciones de los registros
     node *last;
 };
 struct pNode{ // para imprimir b+
@@ -35,7 +38,7 @@ node* getNewNode(bool isLeaf,bool isRoot); // se le dice si el nuevo nodo es hoj
 
 void insertInParentNode(node *n, type_key kprime, node *nprime);
 void insertInLeafNode(node *leafNode, type_key k, node *p);
-void insert2(type_key k, size_t reg);
+void insert2(type_key k, type_reg reg);
 void valueOfNodeInBox(node* tNode);
 void bfsTraverse(node *tNode);
 void phDelete(node* N, type_key k, node* p);
@@ -55,10 +58,11 @@ int main(){
 
 
     printf("nPointer = %d\n",nPointer);
-    int k;int x=1;
+    int k; int x=1;
     while(fscanf(fp,"%d",&k)!=EOF){
         printf("val: %d\n",k);
-        insert2(k,x++);
+        type_reg reg(x++,NULL);
+        insert2(k,reg);
     }
     while(true){
         printf("Action: \npress 1 to insert\npress 2 to print in tree structure\npress 3 for delete\npress 0 for exit\n");
@@ -67,7 +71,8 @@ int main(){
         if(choice==1){
             type_key value;
             scanf("%d",&value);
-            insert2(value,x++);
+            type_reg reg2(x++,NULL);
+            insert2(value,reg2);
         }else if(choice==2){
             printf("\n\n\n");
             bfsTraverse(Root);
@@ -165,13 +170,13 @@ void insertInParentNode(node *n, type_key kprime, node *nprime){
 }
 
 
-void insertInLeafNode(node *leafNode, type_key k, size_t reg){
+void insertInLeafNode(node *leafNode, type_key k, type_reg reg){
     int i;
     for(i=0;i<leafNode->value.size();i++){
         if(k<leafNode->value[i]) break;
     }
     type_key tmpK;
-    size_t tmpReg;
+    type_reg tmpReg;
 
     for(int j = i; j<leafNode->value.size(); j++){
         tmpReg = leafNode->regs[j];
@@ -190,7 +195,7 @@ void insertInLeafNode(node *leafNode, type_key k, size_t reg){
 
 
 //void insert2(int k, node *p){
-void insert2(type_key k, size_t reg){
+void insert2(type_key k, type_reg reg){
     node *leafNode;
     if(Root==NULL){
         Root = getNewNode(true,true); //node* getNewNode(bool isLeaf,bool isRoot);
@@ -240,13 +245,13 @@ void valueOfNodeInBox(node* tNode){
     int i ;
      for(i=0; i<tNode->value.size()-1;i++){
         if(tNode->leaf)
-            printf("%d -> %d |",tNode->value[i], tNode->regs[i]);
+            printf("%d -> %d |",tNode->value[i], tNode->regs[i].get_disk_address());
         else
             printf("%d|",tNode->value[i]);
     }
     if(tNode->value.size()>0) 
         if(tNode->leaf)
-            printf("%d -> %d ]",tNode->value[i], tNode->regs[i]);
+            printf("%d -> %d ]",tNode->value[i], tNode->regs[i].get_disk_address());
         else
             printf("%d]",tNode->value[i]);
     //printf(" ");
