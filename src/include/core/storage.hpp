@@ -55,7 +55,7 @@ namespace storage {
                         return SearchResult { true, i };
 
                     if (!cmp(page[i], data))
-                        return SearchResult { true, i };
+                        return SearchResult { false, i };
                 }
 
                 return SearchResult { false, i };
