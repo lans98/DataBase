@@ -31,15 +31,91 @@ namespace storage {
          * but it also stores an address to disk
          */
         struct Page {
-            array<T, N>             page;
-            array<Address<Node>, N> childs;
+            vector<T>             page;
+            vector<Address<Node>> childs;
+
+            struct SearchResult {
+                bool   found;
+                size_t index;
+            };
+
+            Page(size_t page_size): page(), childs() {
+                page.reserve(page_size + 1);
+                childs.reserve(page_size + 2);
+                childs.emplace_back();
+            }
+
+            SearchResult search(const T& data) {
+                static Eq  eq;
+                static Cmp cmp;
+
+                size_t i = 0UL;
+                for (; i < page.size(); ++i) {
+                    if (eq(page[i], data))
+                        return SearchResult { true, i };
+
+                    if (!cmp(page[i], data))
+                        return SearchResult { true, i };
+                }
+
+                return SearchResult { false, i };
+            }
+
+            template <class U>
+            void shift(vector<U>& vec, size_t start) {
+                vec.emplace_back();
+                for (size_t i = vec.size() - 1; i > start; --i)
+                    vec[i] = vec[i - 1];
+            }
         };
 
         struct Node {
             Page page;
+
+            Node(size_t page_size): page(page_size) {}
+
+            void insert(const T& data, size_t page_size) {
+                if (page.page.size() < page_size) {
+                    size_t index = page.search(data);
+                    page.shift(page.page, index);
+                    page.shift(page.childs, index);
+                    page.page[index] = data;
+
+                } else {
+                }
+            }
+
+            void remove(const T& data, BTree* btree) {
+            
+            }
         };
 
+        Cmp cmp;
+        Eq  eq;
+
+        Address<Node> root;
+        size_t page_size;
+        string nodes_file;
+        
     public:
+
+        BTree(string nodes_file, size_t page_size): 
+            cmp(),
+            eq(),
+            root(), 
+            page_size(page_size),
+            nodes_file(nodes_file) {}
+
+        void insert(const T& data) {
+            auto rootptr = root.read(nodes_file);
+            if (!rootptr) {
+                root.set_memory_address(new Node);
+                rootptr = root.get_memory_address();
+                rootptr->insert(data, page_size);
+            } else {
+                            
+            }
+        }
 
         class Iterator {
         private:
