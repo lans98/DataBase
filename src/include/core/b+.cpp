@@ -16,7 +16,7 @@ struct node {
     node *par;//parent
     vector<type_key> value;
     vector<node*> child;
-    vector<type_reg> regs; // si es hoja se usa este y no child. regs = vector de las posiciones de los registros
+    vector<vector<type_reg>> regs; // si es hoja se usa este y no child. regs = vector de las posiciones de los registros
     node *last;
 };
 struct pNode{ // para imprimir b+
@@ -37,7 +37,7 @@ node* getTargetNode(node *tNode, type_key val); //tNode es un nodo tentativo, de
 node* getNewNode(bool isLeaf,bool isRoot); // se le dice si el nuevo nodo es hoja o raiz
 
 void insertInParentNode(node *n, type_key kprime, node *nprime);
-void insertInLeafNode(node *leafNode, type_key k, node *p);
+void insertInLeafNode(node *leafNode, type_key k, vector<type_reg> vreg);
 void insert2(type_key k, type_reg reg);
 void valueOfNodeInBox(node* tNode);
 void bfsTraverse(node *tNode);
@@ -70,7 +70,7 @@ int main(){
         scanf("%d",&choice);
         if(choice==1){
             type_key value;
-            scanf("%d",&value);
+            scanf("%d",&value);            
             type_reg reg2(x++,NULL);
             insert2(value,reg2);
         }else if(choice==2){
@@ -170,13 +170,13 @@ void insertInParentNode(node *n, type_key kprime, node *nprime){
 }
 
 
-void insertInLeafNode(node *leafNode, type_key k, type_reg reg){
+void insertInLeafNode(node *leafNode, type_key k, vector<type_reg> reg){ // se inserta un nuevo key, un nuevo vector. solo se hace push_back si el key es repetido(no entrara aca)
     int i;
     for(i=0;i<leafNode->value.size();i++){
         if(k<leafNode->value[i]) break;
     }
     type_key tmpK;
-    type_reg tmpReg;
+    vector<type_reg> tmpReg;
 
     for(int j = i; j<leafNode->value.size(); j++){
         tmpReg = leafNode->regs[j];
@@ -206,12 +206,25 @@ void insert2(type_key k, type_reg reg){
     //if(leafNode->value.size()>0) bfsTraverse(leafNode);
 
     type_key keyValueCount = leafNode->value.size();
-    if(keyValueCount<nVal) insertInLeafNode(leafNode,k,reg);
+
+    //no repetidos
+    if(keyValueCount>=1){
+	    int pos;
+	    for(pos=0;pos<leafNode->value.size();pos++){
+	        if(leafNode->value[pos]==k){
+	        	//añadimos a vector de regs
+	        	leafNode->regs[pos].push_back(reg);
+	        	return;
+	        }
+    	}
+    } 
+    vector<type_reg> vreg={reg};
+    if(keyValueCount<nVal) insertInLeafNode(leafNode,k,vreg);
     else{
 
         //printf("dbg: reached in else1\n");
         node* leafNode2 = getNewNode(true,false);
-        insertInLeafNode(leafNode,k,reg);
+        insertInLeafNode(leafNode,k,vreg);
 
         //printf("dbg: inserted in leaf node\n");
        // printf("dbg: content\n");
@@ -240,23 +253,32 @@ void insert2(type_key k, type_reg reg){
         insertInParentNode(leafNode,kprime,leafNode2);
     }
 }
+
 void valueOfNodeInBox(node* tNode){
     printf(" [");
-    int i ;
-     for(i=0; i<tNode->value.size()-1;i++){
-        if(tNode->leaf)
-            printf("%d -> %d |",tNode->value[i], tNode->regs[i].get_disk_address());
-        else
+    int i=0 ;
+    for(;i<tNode->value.size()-1;i++){
+        if(tNode->leaf){
+        	printf("%d -> ",tNode->value[i]);
+        	for(int j=0; j<tNode->regs[i].size(); j++){
+        		printf("%d ",tNode->regs[i][j].get_disk_address());
+        	}
+        	printf("|");
+        }else
             printf("%d|",tNode->value[i]);
     }
     if(tNode->value.size()>0) 
-        if(tNode->leaf)
-            printf("%d -> %d ]",tNode->value[i], tNode->regs[i].get_disk_address());
+        if(tNode->leaf){
+        	printf("%d -> ",tNode->value[i]);
+        	for(int j=0; j<tNode->regs[i].size(); j++){
+        		printf("%d ",tNode->regs[i][j].get_disk_address());
+        	}
+        	printf("]");
+        }
         else
             printf("%d]",tNode->value[i]);
     //printf(" ");
 }
-
 
 
 
@@ -291,6 +313,7 @@ void phDelete(node* N, type_key k, node* p){
         if(N->value[i]==k) break;
     }
     N->value.erase(N->value.begin()+i);
+    if (N->leaf) N->regs.erase(N->regs.begin()+i);
     if(!N->leaf) N->child.erase(N->child.begin()+i+1);
     printf("After ph delete contentent: \n");
     if(N->value.size()>0)bfsTraverse(N);
@@ -384,6 +407,7 @@ void deleteEntry(node* N, type_key k, node* p){
 
                     for(int j = 0; j<N->value.size();j++){
                         Nprime->value.push_back(N->value[j]);
+                        Nprime->regs.push_back(N->regs[j]);
                         ///Nprime->child.push_back(N->child[j]);
                         ///N->child[j]->par = Nprime;
                     }
@@ -467,7 +491,7 @@ void delet(type_key k, node* p){
     node *L = getTargetNode(Root,k);
     printf("content: \n");
     bfsTraverse(L);
-    deleteEntry(L,k,p);
+    deleteEntry(L,k,p); // key k esta en nodo L, p es el puntero de esa key
 
 }
 
