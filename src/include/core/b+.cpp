@@ -441,10 +441,13 @@ void deleteEntry(node* N, type_key k, node* p){
                     }else{
                         int m = Nprime->value.size()-1;
                         type_key tmpV = Nprime->value[m];
+                        vector<type_reg> vreg = Nprime->regs[m];
                         ///node *tmpP = Nprime->child[m];
                         ///Nprime->child.erase(Nprime->child.begin()+m);
+                        Nprime->regs.erase(Nprime->regs.begin()+m);
                         Nprime->value.erase(Nprime->value.begin()+m);
                         ///N->child.insert(N->child.begin(),tmpP);
+                        N->regs.insert(N->regs.begin(),vreg);
                         N->value.insert(N->value.begin(),tmpV);
                         parN->value[i-1] = tmpV;
                     }
@@ -468,12 +471,15 @@ void deleteEntry(node* N, type_key k, node* p){
                     }else{
                         int m = 0;
                         type_key tmpV = Nprime->value[m];
+                        vector<type_reg> vregg = Nprime->regs[m];
                         ///node *tmpP = Nprime->child[m];
                         ///Nprime->child.erase(Nprime->child.begin()+m);
                         Nprime->value.erase(Nprime->value.begin());
+                        Nprime->regs.erase(Nprime->regs.begin());
                         ///N->child.insert(N->child.begin(),tmpP);
                        // N->value.insert(N->value.begin(),tmpV);
                         N->value.push_back(tmpV);
+                        N->regs.push_back(vregg);
                         parN->value[i] = Nprime->value[0];
                     }
 
