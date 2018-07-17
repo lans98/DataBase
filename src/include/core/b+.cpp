@@ -1,4 +1,4 @@
-//Basado en implementación de Ashraful Islam
+//Basado en implementación de Ashraful Islam Emon
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
@@ -267,7 +267,7 @@ void valueOfNodeInBox(node* tNode){
         }else
             printf("%d|",tNode->value[i]);
     }
-    if(tNode->value.size()>0) 
+    if(tNode->value.size()>0)
         if(tNode->leaf){
         	printf("%d -> ",tNode->value[i]);
         	for(int j=0; j<tNode->regs[i].size(); j++){
@@ -283,7 +283,10 @@ void valueOfNodeInBox(node* tNode){
 
 
 void bfsTraverse(node *tNode){
-
+	if(tNode == NULL || tNode->value.size()==0){
+		cout << "[]\n";
+		return;
+	}
     q.push(pNode(tNode,true));
     while(!q.empty()){
         pNode p = q.front();
@@ -295,13 +298,13 @@ void bfsTraverse(node *tNode){
         if(p.nl) printf("\n");
         int i;
         if(!temp->leaf){
-        for(i=0;i<temp->child.size()-1;i++){
-            q.push(pNode(temp->child[i],false));
-        }
-        //printf(" inserted second last child  ");
-        if(p.nl) q.push(pNode(temp->child[i],true));
-        else q.push(pNode(temp->child[i],false));
-        //printf(" inserted  last child  ");
+	        for(i=0;i<temp->child.size()-1;i++){
+	            q.push(pNode(temp->child[i],false));
+        	}
+	        //printf(" inserted second last child  ");
+	        if(p.nl) q.push(pNode(temp->child[i],true));
+	        else q.push(pNode(temp->child[i],false));
+	        //printf(" inserted  last child  ");
         }
 
     }
