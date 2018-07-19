@@ -496,47 +496,6 @@ namespace bplus {
 		    if(nPointer>=(N.get_memory_address()->child.size()+Nprime.get_memory_address()->child.size())) return true;
 		    return false;
 		}
-
-		/*
-		bool indexar_campo(Table tabla, string field_name)
-		{
-		    //leo el archivo relacionado con esta tabla y voy insertando en índice, bajo hash
-		    //se hace flush al terminar, ojo flush solo escribe en disco el árbol, pero este sigue estando en memoria
-
-		    string tabla_path = tabla.get_name()+extension_arch_tabla;
-		    fstream(archivo_tabla);
-		    archivo_tabla.open(tabla_path, fstream::in);
-		    //cerr << tabla.get_fields()[2].get_name() << "\n";
-		    vector<Field> v(tabla.get_fields());
-		    unsigned int posicion_campo = distance(v.begin(), find(v.begin(), v.end(), field_name));
-
-		    string linea, string_campo;
-		    int begin_valor_campo, end_valor_campo;
-		    int posicion_de_inicio_de_linea=0;
-		    while(archivo_tabla >> linea){
-		        int posicion_comas=0, find_;
-		        for(int i_=0; i_<= posicion_campo-1; i_++){
-		            find_ = linea.find(",",posicion_comas,1);
-		            posicion_comas = find_+1;
-		        }
-		        //ubicado justo en el primer caracter del campo a leer
-		        begin_valor_campo = posicion_comas;
-		        end_valor_campo = linea.find(",",posicion_comas,1)-1;
-		        string_campo =  linea.substr(begin_valor_campo, end_valor_campo-begin_valor_campo+1);
-		        //aplicamos hash
-		        size_t valor_hash = hash<string>{}(string_campo);
-		        //nPointers = 200
-		        //insertamos
-		        type_reg reg(posicion_de_inicio_de_linea,NULL); //type_reg: Address<T>
-		        insert(valor_hash,reg);
-		        posicion_de_inicio_de_linea += linea.length() +1;   
-		    }  
-
-		    archivo_tabla.close();
-		    return true;
-		}
-		*/
-
 	};
 }
 

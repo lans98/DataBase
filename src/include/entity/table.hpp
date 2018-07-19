@@ -48,7 +48,6 @@ namespace table {
         size_t                pk_size;
         PrimaryKey            primary_key;
 
-        //RecordStoragePtr      storage;
         map<string, RecordStoragePtr> storage;
 
     public:
@@ -56,8 +55,8 @@ namespace table {
             Entity(), 
             name("_temp_"), 
             pk_size(0UL), 
-            primary_key() {}
-            //storage(nullptr) {}
+            primary_key(),
+            storage() {}
 
         Table(Table&&) = default;
         Table(const Table&) = default;
