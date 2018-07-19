@@ -16,6 +16,28 @@ namespace comparison{
 
   };
 
+  template<typename T>
+  bool compare(DataType d1, T d2, TypeFunction type){
+    switch (type) {
+      case TypeFunction::Equal:
+        return == ;
+      case TypeFunction::Different:
+        return != ;
+      case TypeFunction::Less:
+        return < ;
+      case TypeFunction::Higher:
+        return > ;
+      case TypeFunction::EqualLess:
+        return <= ;
+      case TypeFunction::EqualHigher:
+        return >= ;
+      case TypeFunction::SubString:
+        if(std::get_if<std::string>(&d1.data) && typeid(std::string) == typeid(T))
+          return d1.get_string()->find(d2.get_string()) != d1.get_string()->npos;
+      default:
+        return false;
+    }
+  }
   bool compare(DataType d1, DataType d2, TypeFunction type){
     switch (type) {
       case TypeFunction::Equal:
@@ -31,8 +53,8 @@ namespace comparison{
       case TypeFunction::EqualHigher:
         return >= ;
       case TypeFunction::SubString:
-        if(*std::get_if<std::string>(&d1) && *std::get_if<std::string>(&d2))
-          return d1.get_string().find(d2.get_string()) != d1.get_string().npos;
+        if(std::get_if<std::string>(&d1.data) && std::get_if<std::string>(&d2.data))
+          return d1.get_string()->find(d2.get_string()) != d1.get_string()->npos;
       default:
         return false;
     }
