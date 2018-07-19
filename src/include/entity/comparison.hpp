@@ -1,11 +1,11 @@
 #pragma once
 #include <core/data_types.hpp>
 
-namespace Comparison{
+namespace comparison{
 
   using namespace data_types;
 
-  enum Operations : size_t {
+  enum TypeFunction : size_t {
     Equal,
     Different;
     Less;
@@ -16,41 +16,27 @@ namespace Comparison{
 
   };
 
-  auto getType(DataType a, Type type){
+  bool compare(DataType d1, DataType d2, TypeFunction type){
     switch (type) {
-      case Type::SHORT:
-        return &a.get_short();
-        break;
-      case Type::UINT:
-        return &a.get_uint();
-        break;
-      case Type::ULONG:
-        return &a.get_ulong();
-        break;
-      case Type::DOUBLE:
-        return &a.get_double();
-        break;
-      case Type::INT:
-        return &a.get_int();
-        break;
-      case Type::LONG:
-        return &a.get_long();
-        break;
-      case Type::STRING:
-        return &a.get_string();
-        break;
-      case Type::BOOL:
-        return &a.get_bool();
-        break;
-      case Type::CHAR:
-        return &a.get_char();
-        break;
-      default
-        return nullptr;
-        break;
+      case TypeFunction::Equal:
+        return == ;
+      case TypeFunction::Different:
+        return != ;
+      case TypeFunction::Less:
+        return < ;
+      case TypeFunction::Higher:
+        return > ;
+      case TypeFunction::EqualLess:
+        return <= ;
+      case TypeFunction::EqualHigher:
+        return >= ;
+      case TypeFunction::SubString:
+        if(*std::get_if<std::string>(&d1) && *std::get_if<std::string>(&d2))
+          return d1.get_string().find(d2.get_string()) != d1.get_string().npos;
+      default:
+        return false;
     }
   }
-
   // order comparison functions T to Constant
   /*static bool is_equal(T c1, T c2)       {return c1 == c2;}
   static bool is_different(T c1, T c2)   {return c1 != c2;}
