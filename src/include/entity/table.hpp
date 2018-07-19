@@ -7,6 +7,7 @@
 #include <entity/entity.hpp>
 #include <entity/field.hpp>
 #include <entity/record.hpp>
+#include <entity/comparison.hpp>
 
 #include <set>
 #include <array>
@@ -26,11 +27,12 @@ namespace table {
     using namespace record;
     using namespace storage;
     using namespace data_types;
+    using namespace comparison;
 
     /**
-     * Table is used to hold a vector of fields than 
-     * are the ID's for each of its colums, when we 
-     * are handling with records we can easily know 
+     * Table is used to hold a vector of fields than
+     * are the ID's for each of its colums, when we
+     * are handling with records we can easily know
      * the type of each column, because fields tell
      * us the type.
      */
@@ -50,35 +52,35 @@ namespace table {
         RecordStoragePtr      storage;
 
     public:
-        Table(): 
-            Entity(), 
-            name("_temp_"), 
-            pk_size(0UL), 
-            primary_key(), 
+        Table():
+            Entity(),
+            name("_temp_"),
+            pk_size(0UL),
+            primary_key(),
             storage(nullptr) {}
 
         Table(Table&&) = default;
         Table(const Table&) = default;
 
-        Table(string name, optional<EntityID> opt_parent = nullopt, optional<EntityID> opt_id = nullopt): 
-            Entity(EntityType::TABLE, opt_id, opt_parent), 
-            name(move(name)), 
-            pk_size(0UL), 
-            primary_key(), 
+        Table(string name, optional<EntityID> opt_parent = nullopt, optional<EntityID> opt_id = nullopt):
+            Entity(EntityType::TABLE, opt_id, opt_parent),
+            name(move(name)),
+            pk_size(0UL),
+            primary_key(),
             storage(nullptr) {}
 
-        Table(string name, const initializer_list<Field>& fields_list, optional<EntityID> opt_parent = nullopt, optional<EntityID> opt_id = nullopt): 
-            Entity(EntityType::TABLE, opt_id, opt_parent), 
-            name(move(name)), 
-            pk_size(0UL), 
-            primary_key(), 
-            storage(nullptr) 
+        Table(string name, const initializer_list<Field>& fields_list, optional<EntityID> opt_parent = nullopt, optional<EntityID> opt_id = nullopt):
+            Entity(EntityType::TABLE, opt_id, opt_parent),
+            name(move(name)),
+            pk_size(0UL),
+            primary_key(),
+            storage(nullptr)
         {
             copy(fields_list.begin(), fields_list.end(), fields.begin());
         }
 
         PrimaryKey get_primary_key() const { return primary_key; }
-        optional<Error> set_primary_key(PrimaryKey pk) { 
+        optional<Error> set_primary_key(PrimaryKey pk) {
             for (auto& field: pk) {
                 auto it = find(fields.begin(), fields.end(), field);
                 if (it == fields.end())
@@ -86,7 +88,7 @@ namespace table {
             }
 
             pk_size = pk.size();
-            primary_key = move(pk); 
+            primary_key = move(pk);
 
             return nullopt;
         }
@@ -98,7 +100,7 @@ namespace table {
             if (!storage)
                 throw runtime_error("The storage doesn't exist for this table");
 
-            if (storage->is_empty()) 
+            if (storage->is_empty())
                 throw runtime_error("The storage exists but it's empty for this table");
 
             if (fields.size() < sel_fields.size())
@@ -117,7 +119,7 @@ namespace table {
                 auto end = sel_fields.end();
 
                 size_t found_keys = 0;
-                
+
                 sel_fields_is_valid = true;
                 for (; itr != end; ++itr) {
                     auto search = find(fields.begin(), fields.end(), *itr);
@@ -136,7 +138,7 @@ namespace table {
                 present_primary_key = (found_keys == pk_size) && pk_size;
             }
 
-            // handle results 
+            // handle results
             if (!sel_fields_is_valid)
                 throw runtime_error("Some selected fields are invalid for this table");
 
@@ -144,7 +146,7 @@ namespace table {
             if (both_are_the_same)
                 return *this;
 
-            // Above conditions passed so we can finally create an empty table 
+            // Above conditions passed so we can finally create an empty table
             // that will hold the result
             Table result;
 
@@ -188,6 +190,78 @@ namespace table {
 
             return result;
         }
+        Table selection(Field sel_field, Field other_field, TypeFuncion func){
+          if (!storage)
+            throw runtime_error("The storage doesn't exist for this table");
+
+          if (storage->is_empty())
+            throw runtime_error("The storage exists but it's empty for this table");
+
+          if (sel_field.type != other_field.type)
+            throw runtime_error("Can't operate a comparions between two different Field's types");
+
+          auto fields_end = fields.end();
+          auto fields_begin = fields.begin();
+          auto itr_sel_field = find(fields_begin,fields_end,sel_field);
+          auto itr_other_field = find(fields_begin,fields_end,other_field);
+
+          if (itr_sel_field == fields_end)
+            throw runtime_error("Select field is not found in current table");
+
+          if (itr_other_field == fields_end)
+            throw runtime_error("Select field for comparison is not found in current table");
+
+          Table result;
+
+          auto storage_end = storage->end();
+          size_t size = fields.size();
+          size_t pos1 = itr_sel_field - fields_end;
+          size_t pos2 = itr_other_field - fields_end;
+          for(auto itr = storage->begin(); itr != storage_end; ++itr){
+            vector<DataType> row(size);
+            if( func(itr->values[pos1],itr->values[pos2]) )
+              row = itr->values;
+          }
+
+          return Table;
+        }
+        template<typename T>
+        Table selection(Field sel_field, DataType constant, TypeFuncion func ){
+          if (!storage)
+              throw runtime_error("The storage doesn't exist for this table");
+
+          if (storage->is_empty())
+              throw runtime_error("The storage exists but it's empty for this table");
+
+          if ( typeid(*(Comparison::getType(a,sel_field.type))) != typeid(T))
+            throw runtime_error("Can't operate a comparions between different types");
+
+          //if (sel_field.type != other_field.type)
+          //    throw runtime_error("Can't operate a comparions between two different types");
+
+          auto fields_end = fields.end();
+          auto fields_begin = fields.begin();
+          auto itr_sel_field = find(fields_begin,fields_end,sel_field);
+
+          if (itr_sel_field == fields_end)
+            throw runtime_error("Select field is not found in current table");
+
+          Table result;
+
+          auto storage_end = storage->end();
+          size_t size = fields.size();
+          size_t pos1 = itr_sel_field - fields_end;
+          size_t pos2 = itr_other_field - fields_end;
+          for(auto itr = storage->begin(); itr != storage_end; ++itr){
+            vector<DataType> row(size);
+            if( func(itr->values[pos1],constant) )
+              row = itr->values;
+            }
+
+          return Table;
+        }
+
+
     };
 
 }
