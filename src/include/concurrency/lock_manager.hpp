@@ -311,12 +311,12 @@ namespace lock_manager {
 
     private:
 
-        TableEntityMap::iterator find_table(EntityID id) {
+        TableEntityMap::iterator get_table(EntityID id) {
             table_map[id];
             return table_map.find(id);
         }
 
-        BasicEntityMap::iterator find_basic(EntityID id) {
+        BasicEntityMap::iterator get_basic(EntityID id) {
             EntityIDManagerInstance id_manager = EntityIDManager::get_instance();
 
             auto basic_map = get<1>(table_map[id_manager.parent_of(id)]);
@@ -324,28 +324,21 @@ namespace lock_manager {
             return basic_map.find(id);
         }
 
-        bool check_deque(const PermissionDeque& deque, const function<bool (Permission::Type)>& predicate) {
-            if (deque.empty()) return false;
-                                                         
-            Permission top = deque[0];
-            return (predicate(top.type) && top.granted);
-        }
-
-        bool is_locked(EntityID id, EntityType type, const function<bool (Permission::Type)>& predicate) {
+        PermissionDeque& get_deque(EntityID id, EntityType type) {
             switch (type) {
                 case EntityType::FIELD:
                 case EntityType::RECORD: {
                     PermissionDeque& deque = find_basic(id)->second;
-                    return check_deque(deque, predicate);
+                    return deque;
                 }
 
                 case EntityType::TABLE: {
                     PermissionDeque& deque = get<0>(find_table(id)->second);
-                    return check_deque(deque, predicate);
+                    return deque;
                 }
 
                 case EntityType::DATABASE: {
-                    return check_deque(db_pdeque, predicate);
+                    return db_pdeque;
                 }
 
                 default:
