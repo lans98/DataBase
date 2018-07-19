@@ -111,185 +111,222 @@ namespace lock_manager {
         LockManager() = default;
         LockManager(const LockManager&) = delete;
 
-        bool grant_shared(EntityID id, int transaction_id) {
-            EntityIDManagerInstance id_manager = EntityIDManager::get_instance();       
-            EntityType type = id_manager.type_of(id);
+    private:
 
+        bool grant_shared_basic(EntityID id, EntityType type, int transaction_id) {
+            EntityIDManagerInstance id_manager = EntityIDManager::get_instance();
+
+            PermissionDeque& deque = get_deque(id, type);
             bool grant_value = true;
-            switch (type) {
-                case EntityType::FIELD:
-                case EntityType::RECORD: {
-                    bool exclusive_locked = is_locked(id, type, [](auto ptype) -> bool { 
-                        return ptype == Permission::EXCLUSIVE;
-                    });
 
-                    grant_value = grant_value && !exclusive_locked;
+            auto check_parent = [&grant_value, this](auto id, auto type) {
+                PermissionDeque& deque = this->get_deque(id, type);
+                
+                grant_value = grant_value && !deque.is_exclusive_locked();
+                grant_value = grant_value && !(deque.front().type == Permission::EXCLUSIVE);
 
-                    bool parent_xlocked = is_locked(id_manager.parent_of(id), EntityType::TABLE, [](auto ptype) -> bool {
-                       return ptype == Permission::EXCLUSIVE;     
-                    });
+                if (deque.is_normal())
+                    grant_value = grant_value && (deque.back().type == Permission::SHARED && deque.back().granted);
+            };
 
-                    grant_value = grant_value && !parent_xlocked;
+            auto lock_parent = [this](auto id, auto type, auto lock_id) {
+                PermissionDeque& deque = this->get_deque(id, type);
 
-                    PermissionDeque& deque = find_basic(id)->second;
-                    deque.push_back(Permission {
-                        .type = Permission::SHARED,
-                        .granted = grant_value,
-                        .transaction_id = transaction_id
-                    });
-                }
+                deque.lock_shared();
+                deque.insert_lock(lock_id);
+            };
 
-                case EntityType::TABLE: {
-                    bool exclusive_locked = is_locked(id, type, [](auto ptype) -> bool {
-                        return ptype == Permission::EXCLUSIVE;
-                    });
+            // Check if our deque is locked 
+            grant_value = grant_value && !deque.front().type == Permission::EXCLUSIVE;
+            grant_value = grant_value && (deque.back().type == Permission::SHARED && deque.back().granted);
 
-                    grant_value = grant_value && !exclusive_locked;
-
-                    bool parent_xlocked = is_locked(EntityID(1U), EntityType::DATABASE, [](auto ptype) -> bool {
-                        return ptype == Permission::EXCLUSIVE;
-                    });
-
-                    grant_value = grant_value && !parent_xlocked;
-                    BasicEntityMap& childs = get<1>(find_table(id)->second);
-                    for (auto& [eid, dq] : childs) {
-                        if (!check_deque(dq, [](auto ptype) -> bool { 
-                            return ptype == Permission::EXCLUSIVE || ptype == Permission::SHARED; 
-                        })) {
-                            grant_value = false;
-                            break;
-                        }
-                    }
-
-                    PermissionDeque& deque = get<0>(find_table(id)->second);
-                    deque.push_back(Permission {
-                        .type = Permission::SHARED,
-                        .granted = grant_value,
-                        .transaction_id = transaction_id
-                    });
-                }
-
-                case EntityType::DATABASE: {
-                    bool exclusive_locked = is_locked(id, type, [](auto ptype) -> bool {
-                        return ptype == Permission::EXCLUSIVE;
-                    });
-
-                    grant_value = grant_value && !exclusive_locked;
-
-
-                    PermissionDeque& deque = db_pdeque;
-                    deque.push_back(Permission {
-                       .type = Permission::SHARED,
-                       .granted = grant_value,
-                       .transaction_id = transaction_id
-                    });
-                }
-
-                default:
-                    throw runtime_error("This Entity needs to have a type");
-            }
-
-            PermissionDeque& deque = m_vars[id];
-
-            // Check if there is lock on parent of id
+            // Check if our parent is locked
             EntityID parent = id_manager.parent_of(id);
-            bool id_is_database = parent == 0U && id_manager.type_of(id) == EntityType::DATABASE;
-            bool grant_value = true;
-            if (!id_is_database) {
-                if (parent == 0U) {
-                    throw runtime_error("This Entity needs to have a parent!");
-                } else {
-                    auto search = m_vars.find(parent);
-                    if (search != m_vars.end()) {
-                        auto& parent_deque = search->second;
-                        if (parent_deque[0].type == Permission::EXCLUSIVE)
-                            grant_value = false;
-                    }
-                }
-            }  
+            check_parent(parent, EntityType::TABLE); // check if our direct table parent is locked
+            check_parent(EntityID(1U), EntityType::DATABASE); // check if database is locked
 
-            // if deque is empty we can safely push a new shared permission
-            // and grant it
-            if (deque.empty()) {
-                deque.push_back(Permission{
-                    .type = Permission::SHARED,
-                    .granted = grant_value,
-                    .transaction_id = transaction_id
-                });
-
-                return true;
-            }
-
-            Permission permission;
-
-            // Check if the top permission on the deque is exclusive and granted
-            // if it's true, we can push a new shared permission but we can't grant 
-            // it, so we return false 
-            permission = deque[0];
-            grant_value = grant_value && !(permission.type == Permission::EXCLUSIVE && permission.granted);
-
-            // Check if the last permission on the deque is shared and granted
-            // if it's true depends on the result of the above condition
-            permission = deque.back();
-            grant_value = grant_value && (permission.type == Permission::SHARED && permission.granted);
-
-            deque.push_back(Permission{
+            deque.push_back(Permission {
                 .type = Permission::SHARED,
                 .granted = grant_value,
                 .transaction_id = transaction_id
             });
 
-            // finally return the grant value, if it's false it means we added the
-            // permission to the deque, but we didn't grant it
+            lock_parent(parent, EntityType::TABLE, id);
+            lock_parent(EntityID(1U), EntityType::DATABASE, id);
             return grant_value;
         }
 
-        bool grant_exclusive(EntityID id, int transaction_id) {
-            EntityIDManagerInstance id_manager = EntityIDManager::get_instance();       
-
-            PermissionDeque& deque = m_vars[id];
-
-            // Check if there is lock on parent of id
-            EntityID parent = id_manager.parent_of(id);
-            bool id_is_database = parent == 0U && id_manager.type_of(id) == EntityType::DATABASE;
+        bool grant_shared_table(EntityID id, int transaction_id) {
+            EntityIDManagerInstance id_manager = EntityIDManager::get_instance();
+                
+            PermissionDeque& deque = get_deque(id, EntityType::TABLE);
             bool grant_value = true;
-            if (!id_is_database) {
-                if (parent == 0U) {
-                    throw runtime_error("This Entity needs to have a parent!");
-                } else {
-                    auto search = m_vars.find(parent);
-                    if (search != m_vars.end()) {
-                        auto& parent_deque = search->second;
-                        if (parent_deque[0].type == Permission::EXCLUSIVE || parent_deque[0].type == Permission::SHARED)
-                            grant_value = false;
-                    }
-                }
-            } 
 
+            auto check_parent = [&grant_value, this](auto id, auto type) {
+                PermissionDeque& deque = this->get_deque(id, type);
+                
+                grant_value = grant_value && !deque.is_exclusive_locked();
+                grant_value = grant_value && !(deque.front().type == Permission::EXCLUSIVE);
 
-            // if deque is empty, we can safely push a new exclusive permission
-            if (deque.empty()) {
-                deque.push_back(Permission{
-                    .type = Permission::EXCLUSIVE,
-                    .granted = grant_value,
-                    .transaction_id = transaction_id
-                });
+                if (deque.is_normal())
+                    grant_value = grant_value && (deque.back().type == Permission::SHARED && deque.back().granted);
+            };
 
-                return grant_value;
-            }
+            auto lock_parent = [this](auto id, auto type, auto lock_id) {
+                PermissionDeque& deque = this->get_deque(id, type);
 
-            // in the other case, the deque isn't empty then there is 
-            // a chain of shared permissions, or an exclusive permission 
-            // on the top, in all cases, we can't grant the new permission 
-            // so we just push it and return false, because it's waiting to 
-            // be granted
-            deque.push_back(Permission{
-                .type = Permission::EXCLUSIVE,
-                .granted = false,
+                deque.lock_shared();
+                deque.insert_lock(lock_id);
+            };
+
+            // Check if our deque is locked 
+            grant_value = grant_value && !deque.is_exclusive_locked();
+            grant_value = grant_value && !deque.front().type == Permission::EXCLUSIVE;
+            grant_value = grant_value && (deque.back().type == Permission::SHARED && deque.back().granted);
+
+            check_parent(EntityID(1U), EntityType::DATABASE);
+
+            deque.push_back(Permission {
+                .type = Permission::SHARED,
+                .granted = grant_value,
                 .transaction_id = transaction_id
             });
 
-            return false;
+            lock_parent(EntityID(1U), EntityType::DATABASE, id);
+            return grant_value;
+        }
+
+    public:
+
+        bool grant_shared(EntityID id, int transaction_id) {
+            EntityIDManagerInstance id_manager = EntityIDManager::get_instance();       
+            EntityType type = id_manager.type_of(id);
+
+            switch (type) {
+                case EntityType::FIELD: {
+                    return grant_shared_basic(id, EntityType::FIELD, transaction_id);
+                }
+
+                case EntityType::RECORD: {
+                    return grant_shared_basic(id, EntityType::RECORD, transaction_id);
+                }
+
+                case EntityType::TABLE: {
+                    return grant_shared_table(id, transaction_id);
+                }
+
+                case EntityType::DATABASE: {
+                    bool grant_value = true;
+
+                    PermissionDeque& deque = db_pdeque;
+
+                    grant_value = grant_value && !deque.is_exclusive_locked();
+                    grant_value = grant_value && !deque.front().type == Permission::EXCLUSIVE;
+                    grant_value = grant_value && (deque.back().type == Permission::SHARED && deque.back().granted);
+
+                    deque.push_back(Permission {
+                        .type = Permission::SHARED,
+                        .granted = grant_value,
+                        .transaction_id = transaction_id
+                    });
+
+                    return grant_value;
+                }
+
+                case EntityType::UNKNOWN: 
+                    throw runtime_error("This Entity needs to have a type");
+            }
+        }
+
+    private:
+
+        bool grant_exclusive_basic(EntityID id, EntityType type, int transaction_id) {
+            EntityIDManagerInstance id_manager = EntityIDManager::get_instance();
+
+            PermissionDeque& deque = get_deque(id, type);
+            bool grant_value = true;
+
+            auto check_parent = [&grant_value, this](auto id, auto type) {
+                PermissionDeque& deque = this->get_deque(id, type);
+                
+                grant_value = grant_value && !(deque.is_exclusive_locked() || deque.is_shared_locked());
+                grant_value = grant_value && !(deque.front().type == Permission::EXCLUSIVE);
+
+                if (deque.is_normal())
+                    grant_value = grant_value && !(deque.back().type == Permission::SHARED && deque.back().granted);
+            };
+
+            auto lock_parent = [this](auto id, auto type, auto lock_id) {
+                PermissionDeque& deque = this->get_deque(id, type);
+
+                deque.lock_exclusive();
+                deque.insert_lock(lock_id);
+            };
+
+            // Check if our deque is locked 
+            grant_value = grant_value && !deque.front().type == Permission::EXCLUSIVE;
+            grant_value = grant_value && (deque.back().type == Permission::SHARED && deque.back().granted);
+
+            // Check if our parent is locked
+            EntityID parent = id_manager.parent_of(id);
+            check_parent(parent, EntityType::TABLE); // check if our direct table parent is locked
+            check_parent(EntityID(1U), EntityType::DATABASE); // check if database is locked
+
+            deque.push_back(Permission {
+                .type = Permission::EXCLUSIVE,
+                .granted = grant_value,
+                .transaction_id = transaction_id
+            });
+
+            lock_parent(parent, EntityType::TABLE, id);
+            lock_parent(EntityID(1U), EntityType::DATABASE, id);
+            return grant_value;
+        }
+
+        bool grant_exclusive_table(EntityID id, int transaction_id) {
+        }
+
+    public:
+
+        bool grant_exclusive(EntityID id, int transaction_id) {
+            EntityIDManagerInstance id_manager = EntityIDManager::get_instance();       
+            EntityType type = id_manager.type_of(id);
+
+            switch (type) {
+                case EntityType::FIELD: {
+                    return grant_exclusive_basic(id, EntityType::FIELD, transaction_id);
+                }
+
+                case EntityType::RECORD: {
+                    return grant_exclusive_basic(id, EntityType::RECORD, transaction_id);
+                }
+
+                case EntityType::TABLE: {
+                    return grant_exclusive_table(id, transaction_id);
+                }
+
+                case EntityType::DATABASE: {
+                    bool grant_value = true;
+
+                    PermissionDeque& deque = db_pdeque;
+
+                    grant_value = grant_value && !(deque.is_exclusive_locked() || deque.is_shared_locked());
+                    grant_value = grant_value && !(deque.front().type == Permission::EXCLUSIVE);
+                    grant_value = grant_value && !(deque.back().type == Permission::SHARED && deque.back().granted);
+                    grant_value = grant_value && !deque.empty();
+
+                    deque.push_back(Permission{
+                        .type = Permission::EXCLUSIVE,
+                        .granted = grant_value,
+                        .transaction_id = transaction_id
+                    });
+
+                    return grant_value;
+                }
+
+                case EntityType::UNKNOWN:
+                    throw runtime_error("This Entity needs to have a type");
+            }
         }
 
         // return value shows success or failure
