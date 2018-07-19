@@ -1,16 +1,12 @@
-#pragma once
+#ifndef SCPPDB_STORAGE_HPP
+#define SCPPDB_STORAGE_HPP
 
 #include <config.hpp>
 #include <core/bplus.hpp>
-#include <core/address.hpp>
-#include <entity/record.hpp>
 
 namespace storage {
 
     using namespace std;
-    using namespace address;
-    using namespace record;
-    using namespace config;
     using namespace bplus;
 
     /*
@@ -102,3 +98,5 @@ namespace storage {
         */
     };
 }
+
+#endif

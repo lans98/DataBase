@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SCPPDB_BPLUS_HPP
+#define SCPPDB_BPLUS_HPP
 
 //Basado en implementación de Ashraful Islam Emon
 #include <cstdio>
@@ -6,20 +7,16 @@
 #include <vector>
 #include <queue>
 
-#include <core/address.hpp>
-#include <entity/table.hpp>
-
 #include <fstream>
 #include <string>
 #include <functional>
 
-//puro, sin iteradores, etc, eso se hace en su interfaz (RecordStorage)
-//template<class T>//tipo de dato del campo, NO NECESARIO
+#include <core/address.hpp>
+
 namespace bplus {
 
 	using namespace std;
 	using namespace address;
-	using namespace table;
 
 	class BPlus {
 	public:	
@@ -29,6 +26,7 @@ namespace bplus {
 		const int tam_bloque_de_disco = 4096;//bytes
 		const int tam_key = 4;
 		const int tam_address = 16;
+
 		int nPointer = tam_bloque_de_disco/(tam_key+tam_address);//P1 P2... Pn , n=nPointer, 200
 		int nVal=nPointer-1;
 		struct node {
@@ -69,7 +67,7 @@ namespace bplus {
 		    tmp.get_memory_address()->isRoot = isRoot;
 		    tmp.get_memory_address()->leaf = isLeaf;
 		    tmp.get_memory_address()->last.set_memory_address(NULL);
-		    return tmp;/////////////////7
+		    return tmp;/////////////////
 		}
 
 		void insertInParentNode(Address<node> n, type_key kprime, Address<node> nprime){
@@ -499,6 +497,7 @@ namespace bplus {
 		    return false;
 		}
 
+		/*
 		bool indexar_campo(Table tabla, string field_name)
 		{
 		    //leo el archivo relacionado con esta tabla y voy insertando en índice, bajo hash
@@ -536,6 +535,9 @@ namespace bplus {
 		    archivo_tabla.close();
 		    return true;
 		}
+		*/
 
 	};
 }
+
+#endif
