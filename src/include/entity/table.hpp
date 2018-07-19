@@ -1,8 +1,6 @@
 #pragma once
 
 #include <config.hpp>
-#include <core/error.hpp>
-#include <core/storage.hpp>
 #include <core/data_types.hpp>
 #include <entity/entity.hpp>
 #include <entity/field.hpp>
@@ -19,12 +17,10 @@
 namespace table {
 
     using namespace std;
-    using namespace error;
     using namespace config;
     using namespace entity;
     using namespace field;
     using namespace record;
-    using namespace storage;
     using namespace data_types;
 
     /**
@@ -47,15 +43,16 @@ namespace table {
         size_t                pk_size;
         PrimaryKey            primary_key;
 
-        RecordStoragePtr      storage;
+        //RecordStoragePtr      storage;
+        map<string, RecordStoragePtr> storage;
 
     public:
         Table(): 
             Entity(), 
             name("_temp_"), 
             pk_size(0UL), 
-            primary_key(), 
-            storage(nullptr) {}
+            primary_key() {}
+            //storage(nullptr) {}
 
         Table(Table&&) = default;
         Table(const Table&) = default;
@@ -64,35 +61,50 @@ namespace table {
             Entity(EntityType::TABLE, opt_id, opt_parent), 
             name(move(name)), 
             pk_size(0UL), 
-            primary_key(), 
-            storage(nullptr) {}
+            primary_key() {} 
+            //storage(nullptr) {}
 
-        Table(string name, const initializer_list<Field>& fields_list, optional<EntityID> opt_parent = nullopt, optional<EntityID> opt_id = nullopt): 
+        Table(string name, const vector<Field>& fields_list, optional<EntityID> opt_parent = nullopt, optional<EntityID> opt_id = nullopt): 
             Entity(EntityType::TABLE, opt_id, opt_parent), 
             name(move(name)), 
             pk_size(0UL), 
-            primary_key(), 
-            storage(nullptr) 
+            primary_key() 
+            //storage(nullptr) 
         {
             copy(fields_list.begin(), fields_list.end(), fields.begin());
         }
 
         PrimaryKey get_primary_key() const { return primary_key; }
-        optional<Error> set_primary_key(PrimaryKey pk) { 
+        void set_primary_key(PrimaryKey pk) { 
             for (auto& field: pk) {
                 auto it = find(fields.begin(), fields.end(), field);
                 if (it == fields.end())
-                    return Error(ErrorKind::INCORRECT_PARAMS, "Given primary key is invalid, some fields weren't found for this table");
+                    throw runtime_error("Given primary key is invalid, some fields weren't found for this table");
             }
 
             pk_size = pk.size();
             primary_key = move(pk); 
-
-            return nullopt;
         }
 
         string get_name() const { return name; }
+        vector<Field> get_fields() const { return fields; }
 
+        bool index_field(const string& field) {
+            //si el mapa no tiene un row_storage del campo
+            if(this->storage.find(field)==this->storage.end()){//
+                //indexamos campo
+                //RecordStorage es la clase interfaz del b+
+                //es decir, acá creamos un b+
+                this->storage[field] = make_shared<RecordStorage>();
+                auto row_storage = this->storage[field];
+                row_storage->get_bplus().indexar_campo(this, field);
+                return true;
+            }
+            cerr<<"Ya está indexado el campo "<<campo<<".\n";
+            return false; 
+        }
+
+        /*
         Table projection(vector<Field> sel_fields) {
             // Simple cases where we don't return a result, just an error
             if (!storage)
@@ -188,6 +200,7 @@ namespace table {
 
             return result;
         }
+        */
     };
 
 }
