@@ -22,7 +22,8 @@ namespace lock_manager {
 
     struct Permission {
         enum Type : int {
-            SHARED, EXCLUSIVE
+            SHARED, 
+            EXCLUSIVE,
         };
 
         Type type;
@@ -30,7 +31,73 @@ namespace lock_manager {
         int  transaction_id;
     };
 
-    using PermissionDeque = deque<Permission>;
+    class PermissionDeque : public deque<Permission> {
+    public:
+
+        enum LockState {
+            NORMAL,
+            ISHARED,
+            IEXCLUSIVE,
+        };
+
+    private:
+
+        LockState     state;
+        set<EntityID> lock_by;
+
+    public:
+        PermissionDeque(): deque(), state(LockState::NORMAL), lock_by() {}
+        PermissionDeque(const PermissionDeque&) = default;
+
+        bool lock_shared() { 
+            if (state == IEXCLUSIVE)
+                return false;
+
+            state = ISHARED;
+            return true;
+        }
+        
+        bool lock_exclusive() {
+            if (state == ISHARED)
+                return false;
+
+            state = IEXCLUSIVE;
+            return true;
+        }
+
+        bool insert_lock(EntityID id) {
+            auto [_, inserted] = lock_by.insert(id);
+            return inserted;
+        }
+
+        bool remove_lock(EntityID id) {
+            auto removed = lock_by.erase(id);
+            if (removed == 0UL)
+                return false;
+
+            if (lock_by.empty())
+                state = LockState::NORMAL;
+
+            return true;
+        }
+
+        bool is_lock_by(EntityID id) {
+            auto search = lock_by.find(id);
+            return (search != lock_by.end());
+        }
+
+        bool is_shared_locked() {
+            return state == LockState::ISHARED;
+        }
+
+        bool is_exclusive_locked() {
+            return state == LockState::IEXCLUSIVE;
+        }
+
+        bool is_normal() {
+            return state == LockState::NORMAL;
+        }
+    };
 
     class LockManager {
     private:
