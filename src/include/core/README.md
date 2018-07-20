@@ -1,6 +1,14 @@
 # Módulo core 
 
 ## Address
+Es una clase especial para aplicar la persistencia en la base de datos, es casi
+como un *smart pointer* guardando dos tipos de direcciones una en memoria RAM y otra en disco,
+cuando no se esta usando la memoria RAM y se quiere acceder al objeto, se tiene que cargar
+desde disco (si es que existe en disco), tambien se puede pasar una dirección recien
+creada y luego con un método se puede escribir el objeto en disco y se guarda su posición.
+
+## Storage 
+`RecordStorage` es una interfaz para el B+ 
 
 ## B+ Tree 
 	B+
@@ -65,5 +73,4 @@
 			- En lugar de punteros dobles creo que será menjor que los nodos guarden un puntero a su padre.
 
 
-## Storage 
-RecordStorage es el índice en sí
+
