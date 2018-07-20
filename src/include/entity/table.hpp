@@ -1,7 +1,6 @@
 #pragma once
 
 #include <config.hpp>
-#include <core/error.hpp>
 #include <core/storage.hpp>
 #include <core/data_types.hpp>
 #include <entity/entity.hpp>
@@ -19,7 +18,6 @@
 namespace table {
 
     using namespace std;
-    using namespace error;
     using namespace config;
     using namespace entity;
     using namespace field;
@@ -78,21 +76,20 @@ namespace table {
         }
 
         PrimaryKey get_primary_key() const { return primary_key; }
-        optional<Error> set_primary_key(PrimaryKey pk) { 
+        void set_primary_key(PrimaryKey pk) { 
             for (auto& field: pk) {
                 auto it = find(fields.begin(), fields.end(), field);
                 if (it == fields.end())
-                    return Error(ErrorKind::INCORRECT_PARAMS, "Given primary key is invalid, some fields weren't found for this table");
+                    throw runtime_error("Given primary key is invalid, some fields weren't found for this table");
             }
 
             pk_size = pk.size();
             primary_key = move(pk); 
-
-            return nullopt;
         }
 
         string get_name() const { return name; }
 
+        /*
         Table projection(vector<Field> sel_fields) {
             // Simple cases where we don't return a result, just an error
             if (!storage)
@@ -188,6 +185,6 @@ namespace table {
 
             return result;
         }
+        */
     };
-
 }
