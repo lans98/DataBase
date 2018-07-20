@@ -11,4 +11,4 @@ indexaríamos la pk con ```tabla_persona.index_pk();```
 
 ojo, cada tabla tiene su storage(su índice), por lo tanto pueden existir ```tabla_alumnos.storage["nombre"];``` y ```tabla_profesores.storage["nombre"];```
 
-Además nos da los métodos para haccer los queries, projection, selection, intersectionTable, insert, delete, update (estos últimos aún incompletos). 
+Además nos da los métodos para haccer los queries como projection, selection, intersectionTable, insert, delete, update (estos últimos aún incompletos). 
