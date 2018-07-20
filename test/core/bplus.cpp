@@ -5,6 +5,8 @@
 using namespace std;
 using namespace field;
 using namespace table;
+using namespace bplus;
+using namespace storage;
 
 int main(){
     
@@ -25,14 +27,20 @@ int main(){
     //tabla_persona.storage["apellido"]->search ..->begin()
     //tabla_persona.storage["apellido"]->mostrar();
     vector<size_t> pos_disco;
-    size_t pos;/*
-    Address<BPlus::nodo>  ram_hoja;
-    Address<BPlus::nodo>  ram_i;
-    Info info;//pos, values, regs, i_values, i_regs
-    tabla_persona.storage["apellido"]->search("luca",info);//pos: posición en el archivo del apellido, row: 
-
-    tabla_persona.storage["apellido"]->next_row(info);
-    tabla_persona.storage["apellido"]->next_value(info);*/
+    size_t pos;
+    RecordStorage::Info info;
+            //info: pos-posicion de la fila que contiene"luca en el archivo tabla
+            //      values-vector de las key, entre ellas, "luca",
+            //      i_value-key iesima del nodo hoja que contien "luca",
+            //      registros-vector de registros (mejor dicho, de las posiciones donde inicia el siguiente registro que contiene luca),
+            //      i_registro- posicion de cierto registro que contiene la posicion de key en el archivo
+            //      regs-vector de vector de registros que va emparejado con values
+            //      i_reg- iesimo vector de registros
+            //      last, indica siguiente nodo hoja
+    tabla_persona.storage["apellido"]->search("luca",info);
+    tabla_persona.storage["apellido"]->next_registro(info);
+    tabla_persona.storage["apellido"]->next_key(info);
+    
     
     return 0;
 }
