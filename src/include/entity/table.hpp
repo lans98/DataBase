@@ -217,27 +217,52 @@ namespace table {
           size_t size = fields.size();
           size_t pos1 = itr_sel_field - fields_end;
           size_t pos2 = itr_other_field - fields_end;
+          /*
           for(auto itr = storage->begin(); itr != storage_end; ++itr){
             vector<DataType> row(size);
-            if( func(itr->values[pos1],itr->values[pos2]) )
+            if( compare(itr->values[pos1],itr->values[pos2],func) )
               row = itr->values;
           }
-
+          */
           return Table;
         }
         template<typename T>
-        Table selection(Field sel_field, DataType constant, TypeFuncion func ){
+        Table selection(Field sel_field, T constant, bool func(DataType,DataType) ){
           if (!storage)
               throw runtime_error("The storage doesn't exist for this table");
 
           if (storage->is_empty())
               throw runtime_error("The storage exists but it's empty for this table");
 
-          if ( typeid(*(Comparison::getType(a,sel_field.type))) != typeid(T))
-            throw runtime_error("Can't operate a comparions between different types");
-
-          //if (sel_field.type != other_field.type)
-          //    throw runtime_error("Can't operate a comparions between two different types");
+          switch (sel_field.type) {
+            case Type::SHORT:
+              if( typeid(a.data.get_short()) != typeid(T) )
+                  throw runtime_error("Can't compare two different types");
+            case Type::UINT:
+              if( a.data.get_uint() != typeid(T) )
+                  throw runtime_error("Can't compare two different types");
+            case Type::ULONG:
+              if( a.data.get_ulong() != typeid(T) )
+                  throw runtime_error("Can't compare two different types");
+            case Type::DOUBLE:
+              if( a.data.get_double() != typeid(T) )
+                  throw runtime_error("Can't compare two different types");
+            case Type::INT:
+              if( a.data.get_int() != typeid(T) )
+                  throw runtime_error("Can't compare two different types");
+            case Type::LONG:
+              if( a.data.get_long() != typeid(T) )
+                  throw runtime_error("Can't compare two different types");
+            case Type::STRING:
+              if( a.data.get_string() != typeid(T) )
+                  throw runtime_error("Can't compare two different types");
+            case Type::BOOL:
+              if( a.data.get_bool() != typeid(T) )
+                  throw runtime_error("Can't compare two different types");
+            case Type::CHAR:
+              if( a.data.get_char() != typeid(T) )
+                  throw runtime_error("Can't compare two different types");
+          }
 
           auto fields_end = fields.end();
           auto fields_begin = fields.begin();
@@ -248,20 +273,57 @@ namespace table {
 
           Table result;
 
-          auto storage_end = storage->end();
+          //auto storage_end = storage->end();
           size_t size = fields.size();
           size_t pos1 = itr_sel_field - fields_end;
           size_t pos2 = itr_other_field - fields_end;
-          for(auto itr = storage->begin(); itr != storage_end; ++itr){
-            vector<DataType> row(size);
-            if( func(itr->values[pos1],constant) )
-              row = itr->values;
-            }
+          /*
+          for(){
+          
 
+            }
+          */
           return Table;
         }
 
+        Table union(Table _table){
+          // empty storage
+          //verifiyng same fields and same primary keys  fields
 
+          auto current_end = fields.end();
+          auto parameter_end = _table.fields.end();
+
+          bool same_fields = true;
+
+          for(auto cur_it = fields.begin(), par_it = _table.fields.begin(); par_it != parameter_end && cur_it != current_end; ++cur_it, ++par_it){
+            if(cur_it != par_it){
+              same_fields = false;
+              break;
+            }
+          }
+
+          if(!same_fields)
+            throw runtime_error("Can't union tables with differents fields");
+
+          Table result;
+
+          return result;
+        }
+        Table instersection(Table _table){
+          // empty storage
+          //verifiyng same fields and same primary keys  fields
+
+
+
+        }
+
+        bool Insert(vector<Datafields> Tupla){}
+        bool Delete(vector<Datafields> Tupla){}
+        bool Update(vector<Datafields> Tupla){}
+
+        void print(){
+
+        }
     };
 
 }
