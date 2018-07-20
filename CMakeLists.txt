@@ -41,6 +41,9 @@ add_executable(data_type test/core/data_type.cpp)
 
 # Config test
 add_executable(config test/config.cpp)
+
+# B+ test
+add_executable(bplus test/core/bplus.cpp)
 # ======================================================
 
 # ======================================================
@@ -63,4 +66,7 @@ add_test(data_type_test data_type)
 
 # Config test
 add_test(config_test config)
+
+# B+ test
+add_test(bplus_test bplus)
 # ======================================================
