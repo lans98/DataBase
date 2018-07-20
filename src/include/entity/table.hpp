@@ -66,23 +66,22 @@ namespace table {
             Entity(EntityType::TABLE, opt_id, opt_parent),
             name(move(name)),
             pk_size(0UL),
-            primary_key() {}
-            //storage(nullptr) {}
+            primary_key(),
+            storage() {}
 
         Table(string name, vector<Field> fields_list, optional<EntityID> opt_parent = nullopt, optional<EntityID> opt_id = nullopt):
             Entity(EntityType::TABLE, opt_id, opt_parent),
             name(move(name)),
             pk_size(0UL),
-            primary_key()
-            //storage(nullptr)
+            primary_key(),
+            storage()
         {
-            //copy(fields_list.begin(), fields_list.end(), fields.begin());
-            for(int i=0; i<fields_list.size();i++){
+            for(int i=0; i<fields_list.size();i++)
                 fields.push_back(fields_list[i]);
-            }
         }
 
         PrimaryKey get_primary_key() const { return primary_key; }
+      
         void set_primary_key(PrimaryKey pk) {
             for (auto& field: pk) {
                 auto it = find(fields.begin(), fields.end(), field);
@@ -139,19 +138,71 @@ namespace table {
                 }
 
                 archivo_tabla.close();
+                cerr << "Listo, se indexó el campo "<< field << ".\n";
                 return true;
             }
 
             cerr << "Ya está indexado el campo "<< field << ".\n";
             return false;
-          }
+        }
+
+        bool index_pk() {
+            string field("");
+            for(int i=0; i<primary_key.size();i++){
+                field += primary_key[i];
+            }
+
+            //si el mapa no tiene un row_storage de pk
+            if(this->storage.find(field)==this->storage.end()){
+                //indexamos campo
+                //RecordStorage es la clase interfaz del b+
+                //es decir, acá creamos un b+
+                this->storage[field] = make_shared<RecordStorage>();
+                auto row_storage = this->storage[field];    
+
+                //leo el archivo relacionado con esta tabla y voy insertando en índice, bajo hash
+                //se hace flush al terminar, ojo flush solo escribe en disco el árbol, pero este sigue estando en memoria
+
+                string tabla_path = this->name + ".tabla";
+                fstream(archivo_tabla);
+                archivo_tabla.open("/home/vlue/SCPPDB/test/core/persona.tabla", fstream::in);
+                //cerr << tabla.get_fields()[2].get_name() << "\n";
+                vector<Field> v(this->get_fields());
+                unsigned int posicion_campo = distance(v.begin(), find(v.begin(), v.end(), field));
+
+                string linea, string_campo;
+                int begin_valor_campo, end_valor_campo;
+                int posicion_de_inicio_de_linea=0;
+                while(archivo_tabla >> linea){
+                    int posicion_comas=0, find_;    
+                    //asumimos que las pk estan en los primeros campos                
+                    find_ = linea.find(",",posicion_comas,1);
+                    posicion_comas = find_+1;
+                    find_ = linea.find(",",posicion_comas,1);
+                    posicion_comas = find_+1;                 
+                    //ubicado justo en el primer caracter del campo a leer
+                    begin_valor_campo = 0;
+                    end_valor_campo = posicion_comas-2;
+                    string_campo =  linea.substr(begin_valor_campo, end_valor_campo-begin_valor_campo+1);
+                    //aplicamos hash
+                    size_t valor_hash = hash<string>{}(string_campo);
+                    //nPointers = 200
+                    //insertamos
+                    Address<size_t> reg(posicion_de_inicio_de_linea, nullptr);
+                    row_storage->get_bplus().insert(valor_hash,reg);
+                    posicion_de_inicio_de_linea += linea.length() +1;   
+                }
+                archivo_tabla.close();
+                cerr << "Listo, se indexó el pk "<<field<<"\n";
+                return true;
+            }
+            cerr << "Ya está indexado el pk.\n";
+            return false; 
+        }
 
         Table projection(vector<Field> sel_fields) {
             // Simple cases where we don't return a result, just an error
-            if (!storage)
-                throw runtime_error("The storage doesn't exist for this table");
-
-            if (storage->is_empty())
+            if (storage.empty())
                 throw runtime_error("The storage exists but it's empty for this table");
 
             if (fields.size() < sel_fields.size())
@@ -181,7 +232,7 @@ namespace table {
 
                     itr->set_type(search->get_type());
                     itr->set_visible(true);
-                    auto it = find(primary_key.begin(), primary_key.end(), *itr);
+                    auto it = find(primary_key.begin(), primary_key.end(), itr->get_name());
                     if (it != primary_key.end()) found_keys += 1;
                 }
 
@@ -203,34 +254,23 @@ namespace table {
 
             // if the primary key isn't complete in the selected fields, then we
             // need to use an autocounter has primary key
-            if (!present_primary_key)
-                result.fields.push_back(Field("_counter_", ULONG, false));
+            if (!present_primary_key){
+              result.fields.push_back(Field("_counter_", ULONG, false));
+              for(auto& it : sel_fields)
+                result.fields.push_back(it);
+            }
+            else
+              result.fields = sel_fields;
 
             // set the step for the autocounter if needed
             size_t step_counter = present_primary_key? 0UL : 1UL;
             size_t auto_counter = 0UL;
 
-            auto end = storage->end();
-            for (auto itr = storage->begin(); itr != end; ++itr) {
-                vector<DataType> vals;
-                if (step_counter)
-                    vals.reserve(sel_fields.size() + 1);
-                else
-                    vals.reserve(sel_fields.size());
-
-                if (step_counter) {
-                    vals.push_back(DataType(auto_counter));
-                    auto_counter += step_counter;
-                }
-
-                for (auto& field : sel_fields) {
-                    auto it = find(fields.begin(), fields.end(), field);
-                    auto pos = (it - fields.begin());
-                    vals.push_back(itr->values[pos]);
-                }
+            for(auto& it : sel_fields){
+              result.storage[it.get_name()] = storage[it.get_name()];
             }
 
-            result.fields = sel_fields;
+
             if (present_primary_key) {
                 result.set_primary_key(primary_key);
             } else {
@@ -241,133 +281,77 @@ namespace table {
 
             return result;
         }
-        /*
+
         Table selection(Field sel_field, Field other_field, bool func(DataType,DataType,Type)){
-        if (!storage)
-          throw runtime_error("The storage doesn't exist for this table");
-
-        if (storage->is_empty())
-          throw runtime_error("The storage exists but it's empty for this table");
-
-        if (sel_field.type != other_field.type)
-          throw runtime_error("Can't operate a comparions between two different Field's types");
-
-        auto fields_end = fields.end();
-        auto fields_begin = fields.begin();
-        auto itr_sel_field = find(fields_begin,fields_end,sel_field);
-        auto itr_other_field = find(fields_begin,fields_end,other_field);
-
-        if (itr_sel_field == fields_end)
-          throw runtime_error("Select field is not found in current table");
-
-        if (itr_other_field == fields_end)
-          throw runtime_error("Select field for comparison is not found in current table");
-
-        Table result;
-
-        auto storage_end = storage->end();
-        size_t size = fields.size();
-        size_t pos1 = itr_sel_field - fields_end;
-        size_t pos2 = itr_other_field - fields_end;
-
-        return Table;
-      }
-      template<typename T>
-      Table selection(Field sel_field, T constant, bool func(DataType,DataType,Type) ){
-        if (!storage)
-            throw runtime_error("The storage doesn't exist for this table");
-
-        if (storage->is_empty())
+          if (storage.empty())
             throw runtime_error("The storage exists but it's empty for this table");
 
-        switch (sel_field.type) {
-          case Type::SHORT:
-            if( typeid(a.data.get_short()) != typeid(T) )
-                throw runtime_error("Can't compare two different types");
-          case Type::UINT:
-            if( a.data.get_uint() != typeid(T) )
-                throw runtime_error("Can't compare two different types");
-          case Type::ULONG:
-            if( a.data.get_ulong() != typeid(T) )
-                throw runtime_error("Can't compare two different types");
-          case Type::DOUBLE:
-            if( a.data.get_double() != typeid(T) )
-                throw runtime_error("Can't compare two different types");
-          case Type::INT:
-            if( a.data.get_int() != typeid(T) )
-                throw runtime_error("Can't compare two different types");
-          case Type::LONG:
-            if( a.data.get_long() != typeid(T) )
-                throw runtime_error("Can't compare two different types");
-          case Type::STRING:
-            if( a.data.get_string() != typeid(T) )
-                throw runtime_error("Can't compare two different types");
-          case Type::BOOL:
-            if( a.data.get_bool() != typeid(T) )
-                throw runtime_error("Can't compare two different types");
-          case Type::CHAR:
-            if( a.data.get_char() != typeid(T) )
-                throw runtime_error("Can't compare two different types");
+          if (sel_field.get_type() != other_field.get_type())
+            throw runtime_error("Can't operate a comparions between two different Field's types");
+
+          auto fields_end = fields.end();
+          auto fields_begin = fields.begin();
+          auto itr_sel_field = find(fields_begin,fields_end,sel_field);
+          auto itr_other_field = find(fields_begin,fields_end,other_field);
+
+          if (itr_sel_field == fields_end)
+            throw runtime_error("Select field is not found in current table");
+          if (itr_other_field == fields_end)
+            throw runtime_error("Select field for comparison is not found in current table");
+
+          Table result;
+
+
+          return result;
         }
 
-        auto fields_end = fields.end();
-        auto fields_begin = fields.begin();
-        auto itr_sel_field = find(fields_begin,fields_end,sel_field);
+        template<typename T>
+        Table selection(Field sel_field, T constant, bool func(DataType,DataType,Type) ){
+          if (storage.empty())
+              throw runtime_error("The storage exists but it's empty for this table");
+          //big space for big switch
 
-        if (itr_sel_field == fields_end)
-          throw runtime_error("Select field is not found in current table");
+          auto fields_end = fields.end();
+          auto fields_begin = fields.begin();
+          auto itr_sel_field = find(fields_begin,fields_end,sel_field);
 
-        Table result;
+          if (itr_sel_field == fields_end)
+            throw runtime_error("Select field is not found in current table");
 
-        //auto storage_end = storage->end();
-        size_t size = fields.size();
-        size_t pos1 = itr_sel_field - fields_end;
-        size_t pos2 = itr_other_field - fields_end;
+          Table result;
 
-        return Table;
-      }
 
-      Table union(Table _table){
-        // empty storage
-        //verifiyng same fields and same primary keys  fields
-
-        auto current_end = fields.end();
-        auto parameter_end = _table.fields.end();
-
-        bool same_fields = true;
-
-        for(auto cur_it = fields.begin(), par_it = _table.fields.begin(); par_it != parameter_end && cur_it != current_end; ++cur_it, ++par_it){
-          if(cur_it != par_it){
-            same_fields = false;
-            break;
+          return result;
+        }
+        
+        Table unionTable(Table _table){
+          // empty storage
+          //verifiyng same fields and same primary keys  fields
+          auto current_end = fields.end();
+          auto parameter_end = _table.fields.end();
+          bool same_fields = true;
+          for(auto cur_it = fields.begin(), par_it = _table.fields.begin(); par_it != parameter_end && cur_it != current_end; ++cur_it, ++par_it){
+            if(cur_it != par_it){
+              same_fields = false;
+              break;
+            }
           }
+          if(!same_fields)
+            throw runtime_error("Can't union tables with differents fields");
+          Table result;
+          return result;
         }
 
-        if(!same_fields)
-          throw runtime_error("Can't union tables with differents fields");
+        Table instersectionTable(Table _table){
+          // empty storage
+          //verifiyng same fields and same primary keys  fields
+        }
 
-        Table result;
-
-        return result;
-      }
-
-      Table instersection(Table _table){
-        // empty storage
-        //verifiyng same fields and same primary keys  fields
-
-
-
-      }
-
-      bool Insert(vector<Datafields> Tupla){}
-      bool Delete(vector<Datafields> Tupla){}
-      bool Update(vector<Datafields> Tupla){}
-
-      void print(){
-
-      }*/
+        bool Insert(){}
+        bool Delete(){}
+        bool Update(){}
+        void print() {}
     };
-
 }
 
 #endif

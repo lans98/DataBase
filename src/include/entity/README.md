@@ -1,5 +1,17 @@
-## TABLE
+## Table
+Esta clase también permite indexar el campo que se  quiere; por ejemplo, al hacer ```Table machine_attributes(name,fields)``` se indexaría el campo "value" haciendo ```machine_attributes.index_field("value")```. Y podríamos indexar primary keys simples o compuestas 
+ ```vector<string> primary_key;
+ 
+    primary_key.push_back("timestamp");
+    primary_key.push_back("id");
+    
+    tabla_persona.set_primary_key(primary_key); //compuesta 
+ ```
+indexaríamos la pk con ```tabla_persona.index_pk();```
 
+ojo, cada tabla tiene su storage(su índice), por lo tanto pueden existir ```tabla_alumnos.storage["nombre"];``` y ```tabla_profesores.storage["nombre"];```
+
+Además nos da los métodos para haccer los queries como projection, selection, intersectionTable, insert, delete, update (estos últimos aún incompletos).
   - ### Algebra Relacional:
 - projection: Es la función de proyección de la tabla que imita a la operación homónima en el algebra relacional.
 En el parámetro necesita un vector de los campos (Field) que van a retornar en la nueva tabla result. `Table projection(vector<Field>)`
@@ -27,3 +39,4 @@ La función de selection recorre el campo Field comparándolo con una constante.
  - update: Usa el método delete, buscando con la primary key y si la encuentra, la configura como "borrada" e inserta la nueva tupla. `bool update(Record, pk)`
 
  - delete: Si la primary key del la tupla es encontrado, configura ese Record como "borrado" `delete(Record, pk)`
+

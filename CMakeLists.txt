@@ -26,7 +26,7 @@ add_executable(scppdb ${SOURCES})
 # ======================================================
 
 # Concurrency tests
-#add_executable(lock_manager test/lock_manager.cpp)
+add_executable(lock_manager test/concurrency/lock_manager.cpp)
 
 # Address tests
 add_executable(write_address test/address/write.cpp)
@@ -36,6 +36,7 @@ add_executable(read_address test/address/read.cpp)
 add_executable(field test/entity/field.cpp)
 add_executable(record test/entity/record.cpp)
 add_executable(table test/entity/table.cpp)
+
 # Core tests
 add_executable(data_type test/core/data_type.cpp)
 
@@ -51,7 +52,7 @@ add_executable(bplus test/core/bplus.cpp)
 # ======================================================
 
 # Concurrency tests
-#add_test(lock_manager_test lock_manager)
+add_test(lock_manager_test lock_manager)
 
 # Address tests
 add_test(write_address_test write_address)
@@ -60,6 +61,7 @@ add_test(read_address_test read_address)
 # Entity tests
 add_test(field_test field)
 add_test(record_test record)
+add_test(table_test table)
 
 # Core tests
 add_test(data_type_test data_type)
