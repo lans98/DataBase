@@ -25,7 +25,9 @@ namespace config {
 
     public:
         static void load_config(const string& name) {
-            delete instance;
+            if (instance)
+                delete instance;
+
             instance = new Config(name);
         }
 

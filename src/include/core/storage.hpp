@@ -11,22 +11,6 @@ namespace storage {
     using namespace bplus;
     using namespace address;
 
-    /*
-    tabla.indexar_campo("apellido"){
-        indice=tabla.storage["apellido"]; //acá se crea la clase RecordStorage (es el interfaz de la clase b+)
-        indice->indexar_campo(this,"apellido");
-    }
-    tabla.storage["apellido"].search("Lux");
-    tabla.storage["apellido"].insert("Lux");
-    tabla.storage["apellido"].remove("Lux");
-    tabla.storage["apellido"].is_empty("Lux");
-    tabla.storage["apellido"].flush("Lux");
-    --clase b+(RecordStorage) -- elemento de clase b+ --
-    tabla.storage["apellido"].it.begin();
-    tabla.storage["apellido"].it++;
-    tabla.storage["apellido"].it.last();
-    */
-
     // abstraction for manipulate rows in disk
     class RecordStorage {
     public:
