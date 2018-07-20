@@ -24,9 +24,9 @@ DataBase: Unknown
 Representa los posibles campos en un Tabla (i.e. columnas), y guarda el nombre del campo 
 junto con el tipo de dato de ese campo:
 
-FirstName | LastName | Phone
-------------------------------
-   ...    |   ...    |  ...
+ FirstName | LastName | Phone 
+ --------- | -------- | ----- 
+   ...     |   ...    |  ...  
 
 Donde `FirstName, LastName, Phone` podrian guardar un tipo de dato `STRING` (vease el
 código para ver todos los posibles tipos).
@@ -67,19 +67,25 @@ La función selection hace una búsqueda de ocurrencias de datos del primer camp
 `template<algun tipo T>selection(Field, T,tipo de comparacion)` -> Existen (Field) "dato" comparables con "otro dato" ambos del mismo tipo?
 
 La función de selection recorre el campo Field comparándolo con una constante. El registro donde se encuentra el dato i del campo selecionado se guarda en la nueva tabla.
- Selection puede anidar otras "selections" con las funciones Union y Intersection. En el algebra relacional son comparables con OR y AND. Como ejemplos:
+ Selection puede anidar otras "selections" con las funciones Union y Intersection. En el algebra relacional son comparables con OR y AND. Como ejemplos: 
+ 
+```
+// Table Intersection(Table)
 
-      `Table Intersection(Table)`
-                ´´´SELECT EDAD
-                FROM TABLA PERSONA
-                WHERE EDAD < 100 && EDAD > 10´´´
-  en dos selects: `Select(EDAD,10,>).Intersection(Select(EDAD,100,<))`.
+SELECT EDAD
+FROM TABLA PERSONA
+WHERE EDAD < 100 && EDAD > 10
+```
+En dos selects: `Select(EDAD,10,>).Intersection(Select(EDAD,100,<))`.
 
-      `Table Union(Table)`
-                ´´´SELECT EDAD
-                FROM TABLA PERSONA
-                WHERE EDAD > 50 || EDAD < 10´´´
-  en dos selects: `Select(EDAD,10,>).Union(Select(EDAD,100,<))`.
+```
+// Table Union(Table)
+SELECT EDAD
+FROM TABLA PERSONA
+WHERE EDAD > 50 || EDAD < 10
+```
+
+En dos selects: `Select(EDAD,10,>).Union(Select(EDAD,100,<))`.
 
 - Insert: Inserta una tupla nueva en la tabla, consultando si la primary key de la nueva tupla ya existe en la tabla, entonces no podría. `bool insert(Record, pk)`
 
