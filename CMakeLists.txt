@@ -35,7 +35,7 @@ add_executable(read_address test/address/read.cpp)
 # Entity tests
 add_executable(field test/entity/field.cpp)
 add_executable(record test/entity/record.cpp)
-
+add_executable(table test/entity/table.cpp)
 # Core tests
 add_executable(data_type test/core/data_type.cpp)
 
