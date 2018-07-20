@@ -8,7 +8,6 @@
 #include <entity/entity.hpp>
 #include <entity/field.hpp>
 #include <entity/record.hpp>
-#include <entity/comparison.hpp>
 
 #include <set>
 #include <array>
@@ -29,7 +28,6 @@ namespace table {
     using namespace field;
     using namespace record;
     using namespace data_types;
-    using namespace comparison;
 
     /**
      * Table is used to hold a vector of fields than
@@ -146,7 +144,7 @@ namespace table {
 
             cerr << "Ya está indexado el campo "<< field << ".\n";
             return false;
-        }
+          }
 
         Table projection(vector<Field> sel_fields) {
             // Simple cases where we don't return a result, just an error
@@ -360,14 +358,14 @@ namespace table {
 
 
       }
-      */
+
       bool Insert(vector<Datafields> Tupla){}
       bool Delete(vector<Datafields> Tupla){}
       bool Update(vector<Datafields> Tupla){}
 
       void print(){
 
-      }
+      }*/
     };
 
 }
