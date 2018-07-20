@@ -16,6 +16,7 @@
 #include <utility>
 #include <algorithm>
 #include <initializer_list>
+#include <iostream>
 
 namespace table {
 
@@ -40,7 +41,7 @@ namespace table {
         using PrimaryKey = vector<string>;
         using RecordStoragePtr = shared_ptr<RecordStorage>;
 
-    private:
+    public:
         friend class Record;
 
         string                name;
@@ -68,14 +69,17 @@ namespace table {
             primary_key() {} 
             //storage(nullptr) {}
 
-        Table(string name, const vector<Field>& fields_list, optional<EntityID> opt_parent = nullopt, optional<EntityID> opt_id = nullopt): 
+        Table(string name, vector<Field> fields_list, optional<EntityID> opt_parent = nullopt, optional<EntityID> opt_id = nullopt): 
             Entity(EntityType::TABLE, opt_id, opt_parent), 
             name(move(name)), 
             pk_size(0UL), 
-            primary_key() 
+            primary_key()
             //storage(nullptr) 
-        {
-            copy(fields_list.begin(), fields_list.end(), fields.begin());
+        { 
+            //copy(fields_list.begin(), fields_list.end(), fields.begin());
+            for(int i=0; i<fields_list.size();i++){
+                fields.push_back(fields_list[i]);
+            }
         }
 
         PrimaryKey get_primary_key() const { return primary_key; }
@@ -95,7 +99,7 @@ namespace table {
 
         bool index_field(const string& field) {
             //si el mapa no tiene un row_storage del campo
-            if(this->storage.find(field)==this->storage.end()){//
+            if(this->storage.find(field)==this->storage.end()){
                 //indexamos campo
                 //RecordStorage es la clase interfaz del b+
                 //es decir, acá creamos un b+
@@ -107,7 +111,7 @@ namespace table {
 
                 string tabla_path = this->name + ".tabla";
                 fstream(archivo_tabla);
-                archivo_tabla.open(tabla_path, fstream::in);
+                archivo_tabla.open("/home/vlue/SCPPDB/test/core/persona.tabla", fstream::in);
                 //cerr << tabla.get_fields()[2].get_name() << "\n";
                 vector<Field> v(this->get_fields());
                 unsigned int posicion_campo = distance(v.begin(), find(v.begin(), v.end(), field));
@@ -132,7 +136,7 @@ namespace table {
                     Address<size_t> reg(posicion_de_inicio_de_linea, nullptr);
                     row_storage->get_bplus().insert(valor_hash,reg);
                     posicion_de_inicio_de_linea += linea.length() +1;   
-                }  
+                }
 
                 archivo_tabla.close();
                 return true;
