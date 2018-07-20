@@ -2,22 +2,20 @@
 #include <core/data_types.hpp>
 
 namespace comparison{
-
-  using namespace data_types;
-
+  /*
   enum TypeFunction : size_t {
     Equal,
-    Different;
-    Less;
-    Higher;
-    EqualLess;
-    EqualHigher;
-    SubString;
+    Different,
+    Less,
+    Higher,
+    EqualLess,
+    EqualHigher,
+    SubString
   };
 
   // order comparison functions T to Constant
-  static bool is_equal(DataType &c1, DataType &c2)
-    switch (sel_field.type) {
+  static bool is_equal(data_type::DataType &c1, data_type::DataType &c2, data_type::Type type)
+    switch (type) {
       case Type::SHORT:
         return c1.get_short() == c2.get_short();
       case Type::UINT:
@@ -37,8 +35,8 @@ namespace comparison{
       case Type::CHAR:
         return c1.get_char() == c2.get_char();
     }
-  static bool is_different(DataType &c1, DataType &c2)
-  switch (sel_field.type) {
+  static bool is_different(data_type::DataType &c1, data_type::DataType &c2, data_type::Type type)
+  switch (type) {
     case Type::SHORT:
       return c1.get_short() != c2.get_short();
     case Type::UINT:
@@ -58,8 +56,8 @@ namespace comparison{
     case Type::CHAR:
       return c1.get_char() != c2.get_char();
   }
-  static bool is_less(DataType &c1, DataType &c2)
-    switch (sel_field.type) {
+  static bool is_less(data_type::DataType &c1, data_type::DataType &c2, data_type::Type type)
+    switch (type) {
       case Type::SHORT:
         return c1.get_short() < c2.get_short();
       case Type::UINT:
@@ -79,8 +77,8 @@ namespace comparison{
       case Type::CHAR:
         return c1.get_char() < c2.get_char();
     }
-  static bool is_higher(DataType &c1, DataType &c2)
-    switch (sel_field.type) {
+  static bool is_higher(data_type::DataType &c1, data_type::DataType &c2, data_type::Type type)
+    switch (type) {
       case Type::SHORT:
         return c1.get_short() > c2.get_short();
       case Type::UINT:
@@ -100,8 +98,8 @@ namespace comparison{
       case Type::CHAR:
         return c1.get_char() > c2.get_char();
     }
-  static bool is_equal_less(DataType &c1, DataType &c2)
-    switch (sel_field.type) {
+  static bool is_equal_less(data_type::DataType &c1, data_type::DataType &c2, data_type::Type type)
+    switch (type) {
       case Type::SHORT:
         return c1.get_short() <= c2.get_short();
       case Type::UINT:
@@ -121,8 +119,8 @@ namespace comparison{
       case Type::CHAR:
         return c1.get_char() <= c2.get_char();
     }
-  static bool is_equal_higher(DataType &c1, DataType &c2)
-    switch (sel_field.type) {
+  static bool is_equal_higher(data_type::DataType &c1, data_type::DataType &c2, data_type::Type type)
+    switch (type) {
       case Type::SHORT:
         return c1.get_short() >= c2.get_short();
       case Type::UINT:
@@ -144,7 +142,8 @@ namespace comparison{
     }
 
   // non-order comparison functions T to T
-  static bool sub_string(DataType _string, DataType _substring) {
+  static bool sub_string(data_type::DataType _string, data_type::DataType _substring) {
     return _string.get_string().find(_substring.get_string()) != _string.get_string().npos;
   }
+  */
 };

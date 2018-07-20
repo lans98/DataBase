@@ -243,8 +243,8 @@ namespace table {
 
             return result;
         }
-
-        Table selection(Field sel_field, Field other_field, TypeFuncion func){
+        /*
+        Table selection(Field sel_field, Field other_field, bool func(DataType,DataType,Type)){
         if (!storage)
           throw runtime_error("The storage doesn't exist for this table");
 
@@ -271,17 +271,11 @@ namespace table {
         size_t size = fields.size();
         size_t pos1 = itr_sel_field - fields_end;
         size_t pos2 = itr_other_field - fields_end;
-        /*
-        for(auto itr = storage->begin(); itr != storage_end; ++itr){
-          vector<DataType> row(size);
-          if( compare(itr->values[pos1],itr->values[pos2],func) )
-            row = itr->values;
-        }
-        */
+
         return Table;
       }
       template<typename T>
-      Table selection(Field sel_field, T constant, bool func(DataType,DataType) ){
+      Table selection(Field sel_field, T constant, bool func(DataType,DataType,Type) ){
         if (!storage)
             throw runtime_error("The storage doesn't exist for this table");
 
@@ -331,11 +325,7 @@ namespace table {
         size_t size = fields.size();
         size_t pos1 = itr_sel_field - fields_end;
         size_t pos2 = itr_other_field - fields_end;
-        /*
-        for(){
 
-          }
-        */
         return Table;
       }
 
@@ -362,6 +352,7 @@ namespace table {
 
         return result;
       }
+
       Table instersection(Table _table){
         // empty storage
         //verifiyng same fields and same primary keys  fields
@@ -369,7 +360,7 @@ namespace table {
 
 
       }
-
+      */
       bool Insert(vector<Datafields> Tupla){}
       bool Delete(vector<Datafields> Tupla){}
       bool Update(vector<Datafields> Tupla){}
