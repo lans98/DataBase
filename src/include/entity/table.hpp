@@ -69,15 +69,6 @@ namespace table {
             primary_key() {}
             //storage(nullptr) {}
 
-<<<<<<< HEAD
-        Table(string name, vector<Field> fields_list, optional<EntityID> opt_parent = nullopt, optional<EntityID> opt_id = nullopt): 
-            Entity(EntityType::TABLE, opt_id, opt_parent), 
-            name(move(name)), 
-            pk_size(0UL), 
-            primary_key()
-            //storage(nullptr) 
-        { 
-=======
         Table(string name, vector<Field> fields_list, optional<EntityID> opt_parent = nullopt, optional<EntityID> opt_id = nullopt):
             Entity(EntityType::TABLE, opt_id, opt_parent),
             name(move(name)),
@@ -85,7 +76,6 @@ namespace table {
             primary_key()
             //storage(nullptr)
         {
->>>>>>> 54286d3add23b731752eecfd07320d775a480d51
             //copy(fields_list.begin(), fields_list.end(), fields.begin());
             for(int i=0; i<fields_list.size();i++){
                 fields.push_back(fields_list[i]);
@@ -211,7 +201,6 @@ namespace table {
             return false;
         }
 
-<<<<<<< HEAD
         bool index_pk() {
             string field("");
             for(int i=0; i<primary_key.size();i++){
@@ -266,9 +255,6 @@ namespace table {
             return false; 
         }
 
-        /*
-=======
->>>>>>> 54286d3add23b731752eecfd07320d775a480d51
         Table projection(vector<Field> sel_fields) {
             // Simple cases where we don't return a result, just an error
             if (storage.empty())
@@ -373,6 +359,7 @@ namespace table {
 
           return result;
         }
+
         template<typename T>
         Table selection(Field sel_field, T constant, bool func(DataType,DataType,Type) ){
           if (storage.empty())
@@ -391,6 +378,7 @@ namespace table {
 
           return result;
         }
+        
         Table unionTable(Table _table){
           // empty storage
           //verifiyng same fields and same primary keys  fields
