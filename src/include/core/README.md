@@ -55,8 +55,8 @@ B+, construcción, usando el libro de silberschatz
 - Detalles, los nodos internos del B+ siempre van a tener un puntero a la derecha (en Pn+1), se cumple esta invariante ya que el árbol es balanceado.
 
 ### Inserción en B+:
-	- Aplicamos buscar key en el B+. Retorna las direcciones en disco donde están los registros que contienen la key, y la dirección en memoria donde está el puntero a la hoja que contiene el key, lo llamaremos puntero padre (Pp), el cual es un puntero doble.
-	- Si la hoja está llena antes de insertar:
+- Aplicamos buscar key en el B+. Retorna las direcciones en disco donde están los registros que contienen la key, y la dirección en memoria donde está el puntero a la hoja que contiene el key, lo llamaremos puntero padre (Pp), el cual es un puntero doble.
+- Si la hoja está llena antes de insertar:
 		- Tenemos Pp y hoja hija llena.
 		- La hoja hija ahora se convertirá en dos hijos, que contendrán los keys antiguos y la nueva a insertar. Así tendremos un hijo mayor y uno menor.
 		- Pero tenemos un padre que puede apuntar solo a uno de ellos, ¿a cuál apunta? al mayor, y que una copia de la primera key de este hijo mayor suba, con su puntero, a la izquierda de su padre pero que no descuide (que su puntero apunte) a su hermano menor. Tener en cuenta que no deben haber keys internas repetidas, y notamos que al subir un hijo se mantiene esto.
