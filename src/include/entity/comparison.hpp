@@ -144,5 +144,7 @@ namespace comparison{
     }
 
   // non-order comparison functions T to T
-  static bool sub_string(std::string _string, std::string _substring) {return _string.find(_substring) != _string.npos;}*/
+  static bool sub_string(DataType _string, DataType _substring) {
+    return _string.get_string().find(_substring.get_string()) != _string.get_string().npos;
+  }
 };
