@@ -139,10 +139,65 @@ namespace table {
                 }
 
                 archivo_tabla.close();
+                cerr << "Listo, se indexó el campo "<< field << ".\n";
                 return true;
             }
 
             cerr << "Ya está indexado el campo "<< field << ".\n";
+            return false; 
+        }
+
+        bool index_pk() {
+            string field("");
+            for(int i=0; i<primary_key.size();i++){
+                field += primary_key[i];
+            }
+
+            //si el mapa no tiene un row_storage de pk
+            if(this->storage.find(field)==this->storage.end()){
+                //indexamos campo
+                //RecordStorage es la clase interfaz del b+
+                //es decir, acá creamos un b+
+                this->storage[field] = make_shared<RecordStorage>();
+                auto row_storage = this->storage[field];    
+
+                //leo el archivo relacionado con esta tabla y voy insertando en índice, bajo hash
+                //se hace flush al terminar, ojo flush solo escribe en disco el árbol, pero este sigue estando en memoria
+
+                string tabla_path = this->name + ".tabla";
+                fstream(archivo_tabla);
+                archivo_tabla.open("/home/vlue/SCPPDB/test/core/persona.tabla", fstream::in);
+                //cerr << tabla.get_fields()[2].get_name() << "\n";
+                vector<Field> v(this->get_fields());
+                unsigned int posicion_campo = distance(v.begin(), find(v.begin(), v.end(), field));
+
+                string linea, string_campo;
+                int begin_valor_campo, end_valor_campo;
+                int posicion_de_inicio_de_linea=0;
+                while(archivo_tabla >> linea){
+                    int posicion_comas=0, find_;    
+                    //asumimos que las pk estan en los primeros campos                
+                    find_ = linea.find(",",posicion_comas,1);
+                    posicion_comas = find_+1;
+                    find_ = linea.find(",",posicion_comas,1);
+                    posicion_comas = find_+1;                 
+                    //ubicado justo en el primer caracter del campo a leer
+                    begin_valor_campo = 0;
+                    end_valor_campo = posicion_comas-1;
+                    string_campo =  linea.substr(begin_valor_campo, end_valor_campo-begin_valor_campo+1);
+                    //aplicamos hash
+                    size_t valor_hash = hash<string>{}(string_campo);
+                    //nPointers = 200
+                    //insertamos
+                    Address<size_t> reg(posicion_de_inicio_de_linea, nullptr);
+                    row_storage->get_bplus().insert(valor_hash,reg);
+                    posicion_de_inicio_de_linea += linea.length() +1;   
+                }
+                archivo_tabla.close();
+                cerr << "Listo, se indexó el pk\n";
+                return true;
+            }
+            cerr << "Ya está indexado el pk.\n";
             return false; 
         }
 

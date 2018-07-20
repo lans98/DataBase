@@ -12,57 +12,6 @@ namespace storage {
     using namespace address;
 
     /*
-    template <class T, size_t N>
-    class BTree {
-    private:
-
-        struct Node;
-            
-        /**
-         * Address type is just like a pointer type, 
-         * but it also stores an address to disk
-         
-        struct Page {
-            array<T, N>             page;
-            array<Address<Node>, N> childs;
-        };
-
-        struct Node {
-            Page page;
-        };
-
-    public:
-
-        class Iterator {
-        private:
-
-        public:
-            T& operator*() { /*return Record(); }
-            T& operator->() { /*return Record(); }
-           
-            bool operator==(const Iterator& rhs) { return false; }
-            bool operator!=(const Iterator& rhs) { return false; }
-            
-            Iterator operator++() { return *this; }
-            Iterator operator++(int) { return *this; }
-        };
-
-        // TODO
-        Iterator begin() {  return Iterator(); }
-
-        // TODO
-        Iterator end() { return Iterator(); }
-
-        // TODO
-        Iterator last() { return Iterator(); }
-
-        // TODO 
-        Iterator search(T data) { return Iterator(); }
-    };
-    */
-
-
-    /*
     tabla.indexar_campo("apellido"){
         indice=tabla.storage["apellido"]; //acá se crea la clase RecordStorage (es el interfaz de la clase b+)
         indice->indexar_campo(this,"apellido");
@@ -165,8 +114,10 @@ namespace storage {
                 info.last = info.last.get_memory_address()->last;
                 info.pos = (*info.regs)[0][0].get_disk_address().value();
                 return true;
-            }else
+            }else{
+                cerr << "No hay siguiente key.\n";
                 return false;
+            }
         }
 
         void mostrar()
@@ -174,35 +125,6 @@ namespace storage {
             bplus.bfsTraverse(bplus.Root);
         }
 
-        //Iterator it; it.begin(): puntero a primer Pn de todas las hojas
-
-
-        /*
-        // TODO
-        bool insert(Record) {
-            return false;
-        }
-
-        // TODO
-        bool remove(Record) {
-            return false;
-        }
-
-        // TODO
-        bool is_empty() {
-            return true;
-        }
-
-        // TODO
-        bool flush() {
-            return true;
-        }
-
-        BTree<Record>::Iterator begin();
-        BTree<Record>::Iterator last();
-        BTree<Record>::Iterator end();
-        BTree<Record>::Iterator search();
-        */
     };
 }
 
