@@ -68,4 +68,19 @@ B+, construcción, usando el libro de silberschatz
 
 
 ## Storage 
-RecordStorage es el índice en sí, es la interfaz para el B+.
+RecordStorage es el índice en sí.
+Decimos que RecordStorage la interfaz para el B+.
+Se tiene ```tabla.storage["campo"]->search(key, info)``` donde ```tabla.storage["campo"]``` es un objeto ```RecordStorage```, ```key``` es el valor que se quiere buscar en el índice e ```info``` es un ```struct``` que contiene la siguiente información:
+```
+	    pos: posicion de la fila que contiene"luca en el archivo tabla
+	    values: vector de las key, entre ellas, "luca",
+	    i_value: key iesima del nodo hoja que contien "luca"
+	    registros: vector de registros (mejor dicho, de las posiciones donde inicia el siguiente registro que contiene luca)
+	    i_registro: posicion de cierto registro que contiene la posicion de key en el archivo
+	    regs: vector de vector de registros que va emparejado con values
+	    i_reg: iesimo vector de registros
+	    last: indica siguiente nodo hoja
+```
+
+
+
