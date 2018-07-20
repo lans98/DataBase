@@ -270,8 +270,8 @@ namespace lock_manager {
             };
 
             // Check if our deque is locked 
-            grant_value = grant_value && !deque.front().type == Permission::EXCLUSIVE;
-            grant_value = grant_value && (deque.back().type == Permission::SHARED && deque.back().granted);
+            grant_value = grant_value && !(deque.front().type == Permission::EXCLUSIVE);
+            grant_value = grant_value &&  (deque.back().type == Permission::SHARED && deque.back().granted);
 
             // Check if our parent is locked
             EntityID parent = id_manager.parent_of(id);
@@ -293,7 +293,7 @@ namespace lock_manager {
         bool grant_exclusive_table(EntityID id, int transaction_id) {
             EntityIDManagerInstance id_manager = EntityIDManager::get_instance();
 
-            PermissionDeque& deque = get_deque(id, type);
+            PermissionDeque& deque = get_deque(id, EntityType::TABLE);
             bool grant_value = true;
 
             auto check_parent = [&grant_value, this](auto id, auto type) {
@@ -395,27 +395,22 @@ namespace lock_manager {
 
             // First check that there isn't an implicit exclusive lock on 
             // the database
-            if (db_pdeque.is_exclusive_locked())
+            if (db_pdeque.is_exclusive_locked() || (db_pdeque.front().granted && db_pdeque.front().type == Permission::EXCLUSIVE))
                 return;
 
             // Now lets push to a priority queue all permissions that aren't granted 
             // yet, but under certain conditions
             for (auto& [table_id, table_val]: table_map) {
                 auto& tmp_table_deque = get<0>(table_val);
-                auto& tmp_basic_map = get<1>(table_val);
+                auto& tmp_basic_map   = get<1>(table_val);
 
                 // If our table has an implicit exclusive lock 
                 // skip it because we can't do anything on that table
-                if (tmp_table_deque.is_exclusive_locked() || tmp_table_deque.front().granted)
+                if (tmp_table_deque.is_exclusive_locked() || (tmp_table_deque.front().granted && tmp_table_deque.front().type == Permission::EXCLUSIVE))
                     continue;
 
                 // But if our table isn't locked we can push 
-                if (tmp_table_deque.is_normal()) {
-                    pqueue.push(TimePriority {
-                        .id = table_id,
-                        .time_point = tmp_table_deque.front().time_point
-                    });
-                } else if (tmp_table_deque.front().type == Permission::SHARED) { // it has an implicit shared lock
+                if (tmp_table_deque.is_normal() || (tmp_table_deque.front().type == Permission::SHARED)) {
                     pqueue.push(TimePriority {
                         .id = table_id,
                         .time_point = tmp_table_deque.front().time_point
@@ -428,13 +423,14 @@ namespace lock_manager {
 
                     // If some record/field has a granted permission
                     // then we skip it
-                    if (tmp_basic_deque.front().is_granted())
+                    if (tmp_basic_deque.front().granted && tmp_basic_deque.front().type == Permission::EXCLUSIVE)
                         continue;
 
-                    if (tmp_table_deque.is_normal()) {
-                    
-                    } else if (tmp_basic_deque.front().type == Permission::SHARED) { // it has an implicit shared lock
-                    
+                    if (tmp_table_deque.is_normal() || (tmp_basic_deque.front().type == Permission::SHARED)) {
+                        pqueue.push(TimePriority {
+                            .id = basic_id,
+                            .time_point = tmp_basic_deque.front().time_point
+                        });
                     }
                 }
             }
@@ -443,18 +439,17 @@ namespace lock_manager {
         bool revoke_permission_basic(EntityID id, EntityType type) {
             EntityIDManagerInstance id_manager = EntityIDManager::get_instance();
             PermissionDeque& deque = get_deque(id, type);
-            EntityType parent = id_manager.parent_of(id);
+            EntityID parent = id_manager.parent_of(id);
 
             if (deque.empty()) return false;
 
-            auto& [_, val] = get_table(parent);
-            auto table_deque = val->second;
+            auto& [_, val] = *get_table(parent);
+            auto& table_deque = get<1>(val);
 
             table_deque.remove_lock(id);
             db_pdeque.remove_lock(parent);
             
             deque.pop_front();
-
             return true;
         }
 
@@ -492,7 +487,7 @@ namespace lock_manager {
                 case EntityType::DATABASE: {
                 }
 
-                case EntityType::UNKNOWN 
+                case EntityType::UNKNOWN:
                     throw runtime_error("This Entity needs to have a type");
             }
         }
@@ -516,12 +511,12 @@ namespace lock_manager {
             switch (type) {
                 case EntityType::FIELD:
                 case EntityType::RECORD: {
-                    PermissionDeque& deque = find_basic(id)->second;
+                    PermissionDeque& deque = get_basic(id)->second;
                     return deque;
                 }
 
                 case EntityType::TABLE: {
-                    PermissionDeque& deque = get<0>(find_table(id)->second);
+                    PermissionDeque& deque = get<0>(get_table(id)->second);
                     return deque;
                 }
 
