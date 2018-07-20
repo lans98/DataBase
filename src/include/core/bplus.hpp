@@ -1,7 +1,7 @@
 #ifndef SCPPDB_BPLUS_HPP
 #define SCPPDB_BPLUS_HPP
 
-//Basado en implementación de Ashraful Islam Emon
+//B+ basado en implementación de Ashraful Islam Emon
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
