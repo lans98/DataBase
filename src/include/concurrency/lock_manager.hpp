@@ -375,21 +375,126 @@ namespace lock_manager {
             }
         }
 
-        // return value shows success or failure
-        bool pop_permission(EntityID id, int transaction_id) {
-            PermissionDeque& deque = m_vars[id];
+   private:
 
-            // pop the first permission found in the deque of the 
-            // record in use and same transaction id
-            for (auto it = deque.begin(); it != deque.end(); ++it) {
-                if (it->transaction_id == transaction_id) {
-                    deque.erase(it);
-                    update_permissions(id);
-                    return true;
+        struct TimePriority {
+            EntityID  id;
+            TimePoint time_point;
+
+            bool operator<(const TimePriority& other) const {
+                return time_point < other.time_point;
+            }
+        };
+
+        void update_permissions() {
+            EntityIDManagerInstance id_manager = EntityIDManager::get_instance();
+            priority_queue<TimePriority> pqueue;
+
+            TimePriority tmp_time_priority;
+            Permission   tmp_permission;
+
+            // First check that there isn't an implicit exclusive lock on 
+            // the database
+            if (db_pdeque.is_exclusive_locked())
+                return;
+
+            // Now lets push to a priority queue all permissions that aren't granted 
+            // yet, but under certain conditions
+            for (auto& [table_id, table_val]: table_map) {
+                auto& tmp_table_deque = get<0>(table_val);
+                auto& tmp_basic_map = get<1>(table_val);
+
+                // If our table has an implicit exclusive lock 
+                // skip it because we can't do anything on that table
+                if (tmp_table_deque.is_exclusive_locked() || tmp_table_deque.front().granted)
+                    continue;
+
+                // But if our table isn't locked we can push 
+                if (tmp_table_deque.is_normal()) {
+                    pqueue.push(TimePriority {
+                        .id = table_id,
+                        .time_point = tmp_table_deque.front().time_point
+                    });
+                } else if (tmp_table_deque.front().type == Permission::SHARED) { // it has an implicit shared lock
+                    pqueue.push(TimePriority {
+                        .id = table_id,
+                        .time_point = tmp_table_deque.front().time_point
+                    });
+                }
+
+                // If it isn't implicitly exclusive locked,
+                // then it isn't locked or has an implicit shared lock
+                for (auto& [basic_id, tmp_basic_deque]: tmp_basic_map) {
+
+                    // If some record/field has a granted permission
+                    // then we skip it
+                    if (tmp_basic_deque.front().is_granted())
+                        continue;
+
+                    if (tmp_table_deque.is_normal()) {
+                    
+                    } else if (tmp_basic_deque.front().type == Permission::SHARED) { // it has an implicit shared lock
+                    
+                    }
                 }
             }
+        }
 
-            return false;
+        bool revoke_permission_basic(EntityID id, EntityType type) {
+            EntityIDManagerInstance id_manager = EntityIDManager::get_instance();
+            PermissionDeque& deque = get_deque(id, type);
+            EntityType parent = id_manager.parent_of(id);
+
+            if (deque.empty()) return false;
+
+            auto& [_, val] = get_table(parent);
+            auto table_deque = val->second;
+
+            table_deque.remove_lock(id);
+            db_pdeque.remove_lock(parent);
+            
+            deque.pop_front();
+
+            return true;
+        }
+
+        bool revoke_permission_table(EntityID id) {
+            PermissionDeque& deque = get_deque(id, EntityType::TABLE);
+
+            if (deque.empty()) return false;
+
+            db_pdeque.remove_lock(id);
+
+            deque.pop_front();
+
+            return true;
+        }
+
+   public:
+
+        bool revoke_permission(EntityID id) {
+            EntityIDManagerInstance id_manager = EntityIDManager::get_instance();
+            EntityType type = id_manager.type_of(id);
+
+            switch (type) {
+                case EntityType::FIELD: {
+                    return revoke_permission_basic(id, EntityType::FIELD);
+                }
+
+                case EntityType::RECORD: {
+                    return revoke_permission_basic(id, EntityType::FIELD);
+                }
+
+                case EntityType::TABLE: {
+                    return revoke_permission_table(id);
+                }
+
+                case EntityType::DATABASE: {
+                }
+
+                case EntityType::UNKNOWN 
+                    throw runtime_error("This Entity needs to have a type");
+            }
         }
 
     private:
