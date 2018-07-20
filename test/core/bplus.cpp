@@ -37,9 +37,13 @@ int main(){
             //      regs-vector de vector de registros que va emparejado con values
             //      i_reg- iesimo vector de registros
             //      last, indica siguiente nodo hoja
+    tabla_persona.storage["apellido"]->mostrar();
     tabla_persona.storage["apellido"]->search("luca",info);
+    cerr << info.pos << "\n";
     tabla_persona.storage["apellido"]->next_registro(info);
+    cerr << info.pos << "\n";
     tabla_persona.storage["apellido"]->next_key(info);
+    cerr << info.pos << "\n";
     
     
     return 0;

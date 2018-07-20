@@ -230,24 +230,24 @@ namespace bplus {
 		    int i=0 ;
 		    for(;i<tNode.get_memory_address()->value.size()-1;i++){
 		        if(tNode.get_memory_address()->leaf){
-		        	printf("%d -> ",tNode.get_memory_address()->value[i]);
+		        	printf("%zu -> ",tNode.get_memory_address()->value[i]);
 		        	for(int j=0; j<tNode.get_memory_address()->regs[i].size(); j++){
-		        		printf("%d ",tNode.get_memory_address()->regs[i][j].get_disk_address());
+		        		printf("%zu ",tNode.get_memory_address()->regs[i][j].get_disk_address());
 		        	}
 		        	printf("|");
 		        }else
-		            printf("%d|",tNode.get_memory_address()->value[i]);
+		            printf("%zu|",tNode.get_memory_address()->value[i]);
 		    }
 		    if(tNode.get_memory_address()->value.size()>0)
 		        if(tNode.get_memory_address()->leaf){
-		        	printf("%d -> ",tNode.get_memory_address()->value[i]);
+		        	printf("%zu -> ",tNode.get_memory_address()->value[i]);
 		        	for(int j=0; j<tNode.get_memory_address()->regs[i].size(); j++){
-		        		printf("%d ",tNode.get_memory_address()->regs[i][j].get_disk_address());
+		        		printf("%zu ",tNode.get_memory_address()->regs[i][j].get_disk_address());
 		        	}
 		        	printf("]");
 		        }
 		        else
-		            printf("%d]",tNode.get_memory_address()->value[i]);
+		            printf("%zu]",tNode.get_memory_address()->value[i]);
 		    //printf(" ");
 		}
 

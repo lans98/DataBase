@@ -94,6 +94,7 @@ namespace storage {
             //      regs-vector de vector de registros que va emparejado con values
             //      i_reg- iesimo vector de registros
             //      last, indica siguiente nodo hoja
+            //      last_field, el ultimo campo que se esta iterando
             size_t pos; 
             vector<size_t> *values;            
             unsigned int i_value;
@@ -102,6 +103,7 @@ namespace storage {
             vector<vector<BPlus::type_reg>> *regs;
             unsigned int i_reg;
             Address<BPlus::node> last;
+            string last_field;
         };
 
     public:
