@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Módulo Entity
 
 ## Entity
@@ -44,22 +43,46 @@ con `RecordStoragePtr`, que son una interfaz para el árbol B+.
 Tabla tiene varios metodos para realizar queries (`selection, projection, union,
 etc...`).
 
-Esta clase también permite indexar el campo que se  quiere; por ejemplo, al hacer ---Table machine_attributes(name,fields) se indexaría el campo "value" haciendo machine_attributes.index_field("value". Y podríamos indexar la )---
-ojo, cada tabla tiene su storage, por lo tanto pueden existir tabla_alumnos.storage["nombre"]; y tabla_profesores.storage["nombre"];
-
-=======
-### Table
 Esta clase también permite indexar el campo que se  quiere; por ejemplo, al hacer ```Table machine_attributes(name,fields)``` se indexaría el campo "value" haciendo ```machine_attributes.index_field("value")```. Y podríamos indexar primary keys simples o compuestas 
- ```vector<string> primary_key;
+```
+vector<string> primary_key;
  
-    primary_key.push_back("timestamp");
-    primary_key.push_back("id");
+primary_key.push_back("timestamp");
+primary_key.push_back("id");
     
-    tabla_persona.set_primary_key(primary_key); //compuesta 
- ```
-indexaríamos la pk con ```tabla_persona.index_pk();```
+tabla_persona.set_primary_key(primary_key); //compuesta 
+```
+Indexaríamos la pk con `tabla_persona.index_pk();`
+Ojo, cada tabla tiene su storage(su índice), por lo tanto pueden existir `tabla_alumnos.storage["nombre"];` y `tabla_profesores.storage["nombre"];`
 
-ojo, cada tabla tiene su storage(su índice), por lo tanto pueden existir ```tabla_alumnos.storage["nombre"];``` y ```tabla_profesores.storage["nombre"];```
+Además nos da los métodos para haccer los queries como projection, selection, intersectionTable, insert, delete, update (estos últimos aún incompletos).
 
-Además nos da los métodos para haccer los queries como projection, selection, intersectionTable, insert, delete, update (estos últimos aún incompletos). 
->>>>>>> 006178d60633beb79bec958693057666152b98ac
+### Algebra Relacional:
+- Projection: Es la función de proyección de la tabla que imita a la operación homónima en el algebra relacional.
+En el parámetro necesita un vector de los campos (Field) que van a retornar en la nueva tabla result. `Table projection(vector<Field>)`
+- Selection: Existen dos maneras de seleccionar Records (el conjunto de Records forma una tabla) de una Tabla:
+`selection(Field, Field, tipo de comparacion)` -> Existen (Field) "dato" comparables con (Field) "otro dato" ambos del mismo tipo?
+
+La función selection hace una búsqueda de ocurrencias de datos del primer campo en el segundo, en la misma tupla. Para las ocurrencias, se guardaran las tuplas del registro obtenido en tal iteración.
+`template<algun tipo T>selection(Field, T,tipo de comparacion)` -> Existen (Field) "dato" comparables con "otro dato" ambos del mismo tipo?
+
+La función de selection recorre el campo Field comparándolo con una constante. El registro donde se encuentra el dato i del campo selecionado se guarda en la nueva tabla.
+ Selection puede anidar otras "selections" con las funciones Union y Intersection. En el algebra relacional son comparables con OR y AND. Como ejemplos:
+
+      `Table Intersection(Table)`
+                ´´´SELECT EDAD
+                FROM TABLA PERSONA
+                WHERE EDAD < 100 && EDAD > 10´´´
+  en dos selects: `Select(EDAD,10,>).Intersection(Select(EDAD,100,<))`.
+
+      `Table Union(Table)`
+                ´´´SELECT EDAD
+                FROM TABLA PERSONA
+                WHERE EDAD > 50 || EDAD < 10´´´
+  en dos selects: `Select(EDAD,10,>).Union(Select(EDAD,100,<))`.
+
+- Insert: Inserta una tupla nueva en la tabla, consultando si la primary key de la nueva tupla ya existe en la tabla, entonces no podría. `bool insert(Record, pk)`
+
+- Update: Usa el método delete, buscando con la primary key y si la encuentra, la configura como "borrada" e inserta la nueva tupla. `bool update(Record, pk)`
+
+- Delete: Si la primary key del la tupla es encontrado, configura ese Record como "borrado" `delete(Record, pk)`

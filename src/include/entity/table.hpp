@@ -81,7 +81,7 @@ namespace table {
         }
 
         PrimaryKey get_primary_key() const { return primary_key; }
-
+      
         void set_primary_key(PrimaryKey pk) {
             for (auto& field: pk) {
                 auto it = find(fields.begin(), fields.end(), field);
@@ -90,7 +90,7 @@ namespace table {
             }
 
             pk_size = pk.size();
-            primary_key = move(pk); 
+            primary_key = move(pk);
         }
 
         string get_name() const { return name; }
@@ -134,7 +134,7 @@ namespace table {
                     //insertamos
                     Address<size_t> reg(posicion_de_inicio_de_linea, nullptr);
                     row_storage->get_bplus().insert(valor_hash,reg);
-                    posicion_de_inicio_de_linea += linea.length() +1;   
+                    posicion_de_inicio_de_linea += linea.length() +1;
                 }
 
                 archivo_tabla.close();
