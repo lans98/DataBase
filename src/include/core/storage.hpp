@@ -91,6 +91,7 @@ namespace storage {
             }else{//está en el último registro
                 cerr << "No hay siguiente registro.\n";
                 //info sigue siendo el mismo que el anterior
+                return false;
             }
         }
         

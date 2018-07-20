@@ -33,6 +33,7 @@ int main(){
     tabla_persona.index_field("apellido");
     vector<size_t> pos_disco;
     size_t pos;
+    cerr<<"------------------------------\n";
     RecordStorage::Info info;
             //info: pos-posicion de la fila que contiene"luca en el archivo tabla
             //      values-vector de las key, entre ellas, "luca",
@@ -44,12 +45,23 @@ int main(){
             //      last, indica siguiente nodo hoja
     if(tabla_persona.storage["apellido"]->search("luca",info)){
         cerr <<"Posición de 'luca', "<<info.pos << "\n";
-        tabla_persona.storage["apellido"]->next_registro(info);
-        cerr <<"Posición de siguiente 'luca', "<<info.pos << "\n";
+        if(tabla_persona.storage["apellido"]->next_registro(info)){
+            cerr <<"Posición de siguiente 'luca', "<<info.pos << "\n";
+        }
         tabla_persona.storage["apellido"]->next_key(info);
         cerr <<"Detalle, "<<info.pos << "\n";
     }
-    
+    cerr<<"------------------------------\n";
+    string i_pk("2222222222222,0812308123");
+    if(tabla_persona.storage[pk]->search(i_pk,info)){
+        cerr <<"Posición de "<<i_pk<<": "<<info.pos << "\n";
+        if(tabla_persona.storage[pk]->next_registro(info)){
+            cerr <<"Posición de siguiente "<<i_pk<<": "<<info.pos << "\n";
+        }
+        tabla_persona.storage[pk]->next_key(info);
+        cerr <<"Detalle, "<<info.pos << "\n";
+    }
+
     return 0;
 }
 
