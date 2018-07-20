@@ -3,12 +3,12 @@
 ## Address
 
 ## B+ Tree 
-B+
-	guarda un size_t(hash de dato) y dirección(dirección en buffer o en disco)
-	Se tiene
-		address(disk_address, memory_address)
+	B+
+		guarda un size_t(hash de dato) y dirección(dirección en buffer o en disco)
+		Se tiene
+			address(disk_address, memory_address)
 
-B+, construcción, usando el libro de silberschatz
+	B+, construcción, usando el libro de silberschatz
 
 	- Nodo [P1 K1|P2 K2|... |Pn-1 Kn-1| Pn]
 
