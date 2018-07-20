@@ -26,7 +26,7 @@ add_executable(scppdb ${SOURCES})
 # ======================================================
 
 # Concurrency tests
-#add_executable(lock_manager test/lock_manager.cpp)
+add_executable(lock_manager test/concurrency/lock_manager.cpp)
 
 # Address tests
 add_executable(write_address test/address/write.cpp)
@@ -48,7 +48,7 @@ add_executable(config test/config.cpp)
 # ======================================================
 
 # Concurrency tests
-#add_test(lock_manager_test lock_manager)
+add_test(lock_manager_test lock_manager)
 
 # Address tests
 add_test(write_address_test write_address)
