@@ -66,4 +66,4 @@
 
 
 ## Storage 
-RecordStorage es el índice en sí
+RecordStorage es el índice en sí, es la interfaz para el B+.
