@@ -2,6 +2,8 @@
 
 #include <map>
 #include <deque>
+#include <queue>
+#include <chrono>
 #include <iostream>
 #include <functional>
 
@@ -20,6 +22,9 @@ namespace lock_manager {
     using namespace table;
     using namespace data_types;
 
+    using Clock = chrono::high_resolution_clock;
+    using TimePoint = chrono::time_point<Clock>;
+
     struct Permission {
         enum Type : int {
             SHARED, 
@@ -29,18 +34,16 @@ namespace lock_manager {
         Type type;
         bool granted;
         int  transaction_id;
+        TimePoint time_point;
     };
 
     class PermissionDeque : public deque<Permission> {
-    public:
-
+    private:
         enum LockState {
             NORMAL,
             ISHARED,
             IEXCLUSIVE,
         };
-
-    private:
 
         LockState     state;
         set<EntityID> lock_by;
@@ -148,7 +151,8 @@ namespace lock_manager {
             deque.push_back(Permission {
                 .type = Permission::SHARED,
                 .granted = grant_value,
-                .transaction_id = transaction_id
+                .transaction_id = transaction_id,
+                .time_point = TimePoint()
             });
 
             lock_parent(parent, EntityType::TABLE, id);
@@ -189,7 +193,8 @@ namespace lock_manager {
             deque.push_back(Permission {
                 .type = Permission::SHARED,
                 .granted = grant_value,
-                .transaction_id = transaction_id
+                .transaction_id = transaction_id,
+                .time_point = TimePoint()
             });
 
             lock_parent(EntityID(1U), EntityType::DATABASE, id);
@@ -227,7 +232,8 @@ namespace lock_manager {
                     deque.push_back(Permission {
                         .type = Permission::SHARED,
                         .granted = grant_value,
-                        .transaction_id = transaction_id
+                        .transaction_id = transaction_id,
+                        .time_point = TimePoint()
                     });
 
                     return grant_value;
@@ -275,7 +281,8 @@ namespace lock_manager {
             deque.push_back(Permission {
                 .type = Permission::EXCLUSIVE,
                 .granted = grant_value,
-                .transaction_id = transaction_id
+                .transaction_id = transaction_id,
+                .time_point = TimePoint()
             });
 
             lock_parent(parent, EntityType::TABLE, id);
@@ -318,7 +325,8 @@ namespace lock_manager {
                     deque.push_back(Permission{
                         .type = Permission::EXCLUSIVE,
                         .granted = grant_value,
-                        .transaction_id = transaction_id
+                        .transaction_id = transaction_id,
+                        .time_point = TimePoint()
                     });
 
                     return grant_value;
@@ -380,32 +388,6 @@ namespace lock_manager {
 
                 default:
                     throw runtime_error("This Entity needs to have a type");
-            }
-        }
-
-        void update_permissions(EntityID id) {
-            PermissionDeque& deque = m_vars[id];
-            // if the deque is empty, early return
-            // if the top permission in the deque is granted
-            // then it should be either a chain of contiguous shared 
-            // permissions or an unique exclusive permission, in that
-            // case early return
-            if (deque.empty() || deque[0].granted) return;
-
-            // now grant the top permission in the deque 
-            deque[0].granted = true;
-            // iterate over the deque, searching if there is an
-            // exclusive permission, there are two cases:
-            // the top permission is shared and we already granted it, 
-            // if the contiguous permissions are also shared we can 
-            // grant them until we find an exclusive permission that breaks
-            // the chain, otherwise if the top permission we granted is 
-            // exclusive, when we start iterating we would enter the 'if' and
-            // break the 'for'
-            for (auto& permission : deque) {
-                if (permission.type == Permission::EXCLUSIVE)
-                    return;
-                permission.granted = true;
             }
         }
     };
