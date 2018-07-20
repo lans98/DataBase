@@ -20,13 +20,14 @@ B+, construcción, usando el libro de silberschatz
 -En disco, los Pi tienen las posiciones en el mismo archivo de los bloques hijos. ojo, se len solo los bloques adecuados, no se carga todo a ram.
 
 #### Cuando leo del disco:
+```
 -Levanto raiz.
 -Cuando se levanta todo el bloque a ram, Pi es la posición en disco.	Detecto Kj comparando con las otras claves, y con Pj voy al disco y genero un nuevo nodo hijo pero cambio el Pj anterior con la dir de memoria de este nodo.
 
 -Se escribe en disco desde el nodo raíz hasta las hojas y el vector de estas hojas.
 
 -En disco:
-```
+
 	------------------
 	- 0 P1 K1 P2 K2 ... Pn-1 Kn-1 Pn
 	- 0 P1 K1 P2 K2 ... Pn-1 Kn-1 Pn
