@@ -13,59 +13,135 @@ namespace comparison{
     EqualLess;
     EqualHigher;
     SubString;
-
   };
 
-  template<typename T>
-  bool compare(DataType d1, T d2, TypeFunction type){
-    switch (type) {
-      case TypeFunction::Equal:
-        return == ;
-      case TypeFunction::Different:
-        return != ;
-      case TypeFunction::Less:
-        return < ;
-      case TypeFunction::Higher:
-        return > ;
-      case TypeFunction::EqualLess:
-        return <= ;
-      case TypeFunction::EqualHigher:
-        return >= ;
-      case TypeFunction::SubString:
-        if(std::get_if<std::string>(&d1.data) && typeid(std::string) == typeid(T))
-          return d1.get_string()->find(d2.get_string()) != d1.get_string()->npos;
-      default:
-        return false;
-    }
-  }
-  bool compare(DataType d1, DataType d2, TypeFunction type){
-    switch (type) {
-      case TypeFunction::Equal:
-        return == ;
-      case TypeFunction::Different:
-        return != ;
-      case TypeFunction::Less:
-        return < ;
-      case TypeFunction::Higher:
-        return > ;
-      case TypeFunction::EqualLess:
-        return <= ;
-      case TypeFunction::EqualHigher:
-        return >= ;
-      case TypeFunction::SubString:
-        if(std::get_if<std::string>(&d1.data) && std::get_if<std::string>(&d2.data))
-          return d1.get_string()->find(d2.get_string()) != d1.get_string()->npos;
-      default:
-        return false;
-    }
-  }
   // order comparison functions T to Constant
-  /*static bool is_equal(T c1, T c2)       {return c1 == c2;}
-  static bool is_different(T c1, T c2)   {return c1 != c2;}
-  static bool is_less(T c1, T c2)        {return c1 <  c2;}
-  static bool is_higher(T c1, T c2)      {return c1 >  c2;}
-  static bool is_equal_less(T c1, T c2)  {return c1 <= c2;}
-  static bool is_equal_higher(T c1, T c2){return c1 >= c2;}
+  static bool is_equal(DataType &c1, DataType &c2)
+    switch (sel_field.type) {
+      case Type::SHORT:
+        return c1.get_short() == c2.get_short();
+      case Type::UINT:
+        return c1.get_uint() == c2.get_uint();
+      case Type::ULONG:
+        return c1.get_ulong() == c2.get_ulong();
+      case Type::DOUBLE:
+        return c1.get_double() == c2.get_double();
+      case Type::INT:
+        return c1.get_int() == c2.get_int();
+      case Type::LONG:
+        return c1.get_long() == c2.get_long();
+      case Type::STRING:
+        return c1.get_string() == c2.get_string();
+      case Type::BOOL:
+        return c1.get_bool() == c2.get_bool();
+      case Type::CHAR:
+        return c1.get_char() == c2.get_char();
+    }
+  static bool is_different(DataType &c1, DataType &c2)
+  switch (sel_field.type) {
+    case Type::SHORT:
+      return c1.get_short() != c2.get_short();
+    case Type::UINT:
+      return c1.get_uint() != c2.get_uint();
+    case Type::ULONG:
+      return c1.get_ulong() != c2.get_ulong();
+    case Type::DOUBLE:
+      return c1.get_double() != c2.get_double();
+    case Type::INT:
+      return c1.get_int() != c2.get_int();
+    case Type::LONG:
+      return c1.get_long() != c2.get_long();
+    case Type::STRING:
+      return c1.get_string() != c2.get_string();
+    case Type::BOOL:
+      return c1.get_bool() != c2.get_bool();
+    case Type::CHAR:
+      return c1.get_char() != c2.get_char();
+  }
+  static bool is_less(DataType &c1, DataType &c2)
+    switch (sel_field.type) {
+      case Type::SHORT:
+        return c1.get_short() < c2.get_short();
+      case Type::UINT:
+        return c1.get_uint() < c2.get_uint();
+      case Type::ULONG:
+        return c1.get_ulong() < c2.get_ulong();
+      case Type::DOUBLE:
+        return c1.get_double() < c2.get_double();
+      case Type::INT:
+        return c1.get_int() < c2.get_int();
+      case Type::LONG:
+        return c1.get_long() < c2.get_long();
+      case Type::STRING:
+        return c1.get_string() < c2.get_string();
+      case Type::BOOL:
+        return c1.get_bool() < c2.get_bool();
+      case Type::CHAR:
+        return c1.get_char() < c2.get_char();
+    }
+  static bool is_higher(DataType &c1, DataType &c2)
+    switch (sel_field.type) {
+      case Type::SHORT:
+        return c1.get_short() > c2.get_short();
+      case Type::UINT:
+        return c1.get_uint() > c2.get_uint();
+      case Type::ULONG:
+        return c1.get_ulong() > c2.get_ulong();
+      case Type::DOUBLE:
+        return c1.get_double() > c2.get_double();
+      case Type::INT:
+        return c1.get_int() > c2.get_int();
+      case Type::LONG:
+        return c1.get_long() > c2.get_long();
+      case Type::STRING:
+        return c1.get_string() > c2.get_string();
+      case Type::BOOL:
+        return c1.get_bool() > c2.get_bool();
+      case Type::CHAR:
+        return c1.get_char() > c2.get_char();
+    }
+  static bool is_equal_less(DataType &c1, DataType &c2)
+    switch (sel_field.type) {
+      case Type::SHORT:
+        return c1.get_short() <= c2.get_short();
+      case Type::UINT:
+        return c1.get_uint() <= c2.get_uint();
+      case Type::ULONG:
+        return c1.get_ulong() <= c2.get_ulong();
+      case Type::DOUBLE:
+        return c1.get_double() <= c2.get_double();
+      case Type::INT:
+        return c1.get_int() <= c2.get_int();
+      case Type::LONG:
+        return c1.get_long() <= c2.get_long();
+      case Type::STRING:
+        return c1.get_string() <= c2.get_string();
+      case Type::BOOL:
+        return c1.get_bool() <= c2.get_bool();
+      case Type::CHAR:
+        return c1.get_char() <= c2.get_char();
+    }
+  static bool is_equal_higher(DataType &c1, DataType &c2)
+    switch (sel_field.type) {
+      case Type::SHORT:
+        return c1.get_short() >= c2.get_short();
+      case Type::UINT:
+        return c1.get_uint() >= c2.get_uint();
+      case Type::ULONG:
+        return c1.get_ulong() >= c2.get_ulong();
+      case Type::DOUBLE:
+        return c1.get_double() >= c2.get_double();
+      case Type::INT:
+        return c1.get_int() >= c2.get_int();
+      case Type::LONG:
+        return c1.get_long() >= c2.get_long();
+      case Type::STRING:
+        return c1.get_string() >= c2.get_string();
+      case Type::BOOL:
+        return c1.get_bool() >= c2.get_bool();
+      case Type::CHAR:
+        return c1.get_char() >= c2.get_char();
+    }
 
   // non-order comparison functions T to T
   static bool sub_string(std::string _string, std::string _substring) {return _string.find(_substring) != _string.npos;}*/
