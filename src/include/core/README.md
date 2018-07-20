@@ -81,6 +81,8 @@ Se tiene ```tabla.storage["campo"]->search(key, info)``` donde ```tabla.storage[
 	    i_reg: iesimo vector de registros
 	    last: indica siguiente nodo hoja
 ```
+Además de search, se da ```next_registro``` y ```mostrar```, el primero permite avanzar al siguiente registro en la tabla para cierto valor del campo, y mostrar nos dibuja, rudimentariamente, los nodos del árbol.
 
-
+## Hash
+El b+ no guarda como key el valor del campo tal cual, sino transforma este valor mediante un función hash que retorna, para cualquier tipo de campo, un valor tipo ```size_t```. Esta función nos la la la STL.
 
