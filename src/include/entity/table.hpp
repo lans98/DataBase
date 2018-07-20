@@ -265,6 +265,8 @@ namespace table {
           if (storage->is_empty())
               throw runtime_error("The storage exists but it's empty for this table");
 
+          // big space for big switch for compare datatype.type and T
+
           auto fields_end = fields.end();
           auto fields_begin = fields.begin();
           auto itr_sel_field = find(fields_begin,fields_end,sel_field);

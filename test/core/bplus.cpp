@@ -22,10 +22,15 @@ int main(){
     primary_key.push_back("id");
     Table tabla_persona(name, fields);
     tabla_persona.set_primary_key(primary_key);
+    tabla_persona.index_pk();
     //indexar_pk;
+    string pk("");
+    for(int i=0; i<primary_key.size();i++){
+        pk += primary_key[i];
+    }
+    //tabla_persona.storage[pk]->mostrar();
+    //
     tabla_persona.index_field("apellido");
-    //tabla_persona.storage["apellido"]->search ..->begin()
-    //tabla_persona.storage["apellido"]->mostrar();
     vector<size_t> pos_disco;
     size_t pos;
     RecordStorage::Info info;
@@ -37,10 +42,13 @@ int main(){
             //      regs-vector de vector de registros que va emparejado con values
             //      i_reg- iesimo vector de registros
             //      last, indica siguiente nodo hoja
-    tabla_persona.storage["apellido"]->search("luca",info);
-    tabla_persona.storage["apellido"]->next_registro(info);
-    tabla_persona.storage["apellido"]->next_key(info);
-    
+    if(tabla_persona.storage["apellido"]->search("luca",info)){
+        cerr <<"Posición de 'luca', "<<info.pos << "\n";
+        tabla_persona.storage["apellido"]->next_registro(info);
+        cerr <<"Posición de siguiente 'luca', "<<info.pos << "\n";
+        tabla_persona.storage["apellido"]->next_key(info);
+        cerr <<"Detalle, "<<info.pos << "\n";
+    }
     
     return 0;
 }
