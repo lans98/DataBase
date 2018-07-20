@@ -5,47 +5,11 @@
 using namespace std;
 using namespace field;
 using namespace table;
+using namespace bplus;
+using namespace storage;
 
 int main(){
-    /*
-    bmas<int> indice;
-    printf("How many values in each node?\n");
-    FILE *fp;
-    fp = fopen("input.txt","r");
-    int w,v;
-    fscanf(fp,"%d",&w);
-    v = w-1;
-
-
-    printf("nPointer = %d\n",indice.nPointer);
-    int k; int x=1;
-    while(fscanf(fp,"%d",&k)!=EOF){
-        printf("val: %d\n",k);
-        bmas<int>::type_reg reg(x++,NULL);
-        indice.insert(k,reg);
-    }
-    while(true){
-        printf("Action: \npress 1 to insert\npress 2 to print in tree structure\npress 3 for delete\npress 0 for exit\n");
-        int choice;
-        scanf("%d",&choice);
-        if(choice==1){
-            bmas<int>::type_key value;
-            scanf("%d",&value);            
-            bmas<int>::type_reg reg2(x++,NULL);
-            indice.insert(value,reg2);
-        }else if(choice==2){
-            printf("\n\n\n");
-            indice.bfsTraverse(indice.Root);
-            printf("\n\n\n");
-        }else if(choice==3){
-            bmas<int>::type_key delV;
-            scanf("%d",&delV);
-            indice.delet(delV,NULL);
-        }else if(choice==0) break;
-    }
-    fclose(fp);
-    */
-
+    
     string name="persona";
     vector<Field> fields;
     fields.push_back(Field("timestamp",STRING,true));
@@ -58,7 +22,48 @@ int main(){
     primary_key.push_back("id");
     Table tabla_persona(name, fields);
     tabla_persona.set_primary_key(primary_key);
+    tabla_persona.index_pk();
     //indexar_pk;
+    string pk("");
+    for(int i=0; i<primary_key.size();i++){
+        pk += primary_key[i];
+    }
+    //tabla_persona.storage[pk]->mostrar();
+    //
     tabla_persona.index_field("apellido");
+    vector<size_t> pos_disco;
+    size_t pos;
+    cerr<<"------------------------------\n";
+    RecordStorage::Info info;
+            //info: pos-posicion de la fila que contiene"luca en el archivo tabla
+            //      values-vector de las key, entre ellas, "luca",
+            //      i_value-key iesima del nodo hoja que contien "luca",
+            //      registros-vector de registros (mejor dicho, de las posiciones donde inicia el siguiente registro que contiene luca),
+            //      i_registro- posicion de cierto registro que contiene la posicion de key en el archivo
+            //      regs-vector de vector de registros que va emparejado con values
+            //      i_reg- iesimo vector de registros
+            //      last, indica siguiente nodo hoja
+    if(tabla_persona.storage["apellido"]->search("luca",info)){
+        cerr <<"Posición de 'luca', "<<info.pos << "\n";
+        if(tabla_persona.storage["apellido"]->next_registro(info)){
+            cerr <<"Posición de siguiente 'luca', "<<info.pos << "\n";
+        }
+        tabla_persona.storage["apellido"]->next_key(info);
+        cerr <<"Detalle, "<<info.pos << "\n";
+    }
+    cerr<<"------------------------------\n";
+    string i_pk("2222222222222,0812308123");
+    if(tabla_persona.storage[pk]->search(i_pk,info)){
+        cerr <<"Posición de "<<i_pk<<": "<<info.pos << "\n";
+        if(tabla_persona.storage[pk]->next_registro(info)){
+            cerr <<"Posición de siguiente "<<i_pk<<": "<<info.pos << "\n";
+        }
+        tabla_persona.storage[pk]->next_key(info);
+        cerr <<"Detalle, "<<info.pos << "\n";
+    }
+
     return 0;
 }
+
+
+
