@@ -35,8 +35,8 @@ int main(){
     //      regs-vector de registros (mejor dicho, de las posiciones donde inicia el siguiente registro que contiene luca),
     //      i_reg- registro iesimo que contiene "luca"
     tabla_persona.storage["apellido"]->search("luca",info);
-    //tabla_persona.storage["apellido"]->next_registro(info);
-    //tabla_persona.storage["apellido"]->next_key(info);
+    tabla_persona.storage["apellido"]->next_registro(info);
+    tabla_persona.storage["apellido"]->next_key(info);
     
     
     return 0;

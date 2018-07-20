@@ -90,7 +90,10 @@ namespace storage {
             //      values-vector de las key, entre ellas, "luca",
             //      i_value-key iesima del nodo hoja que contien "luca",
             //      registros-vector de registros (mejor dicho, de las posiciones donde inicia el siguiente registro que contiene luca),
-            //      i_registro- registro iesimo que contiene "luca"
+            //      i_registro- posicion de cierto registro que contiene la posicion de key en el archivo
+            //      regs-vector de vector de registros que va emparejado con values
+            //      i_reg- iesimo vector de registros
+            //      last, indica siguiente nodo hoja
             size_t pos; 
             vector<size_t> *values;            
             unsigned int i_value;
@@ -98,7 +101,7 @@ namespace storage {
             unsigned int i_registro;
             vector<vector<BPlus::type_reg>> *regs;
             unsigned int i_reg;
-            Address<BPlus::node> last_child;
+            Address<BPlus::node> last;
         };
 
     public:
@@ -121,8 +124,8 @@ namespace storage {
                     info.regs = &hoja.get_memory_address()->regs;
                     info.i_reg = i;
                     info.registros = &hoja.get_memory_address()->regs[i];
-                    info.i_registro = 0;cerr << info.values->size()<<"\n";
-                    info.last_child = hoja.get_memory_address()->child[info.values->size()];
+                    info.i_registro = 0;
+                    info.last = hoja.get_memory_address()->last;
                     return true;
                 }
             }
@@ -152,14 +155,14 @@ namespace storage {
                 info.pos = (*info.registros)[0].get_disk_address().value();
                 return true;
             }else 
-            if(info.last_child.get_memory_address() != NULL){ //toma la key del siguiente nodo
+            if(info.last.get_memory_address() != NULL){ //toma la key del siguiente nodo
                 info.i_value = 0;
                 info.i_reg = 0;
-                info.values = &info.last_child.get_memory_address()->value;
-                info.regs = &info.last_child.get_memory_address()->regs;
+                info.values = &info.last.get_memory_address()->value;
+                info.regs = &info.last.get_memory_address()->regs;
                 info.registros = &(*info.regs)[0];
                 info.i_registro = 0;
-                info.last_child = info.last_child.get_memory_address()->child[info.values->size()];
+                info.last = info.last.get_memory_address()->last;
                 info.pos = (*info.regs)[0][0].get_disk_address().value();
                 return true;
             }else
