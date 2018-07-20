@@ -2,6 +2,8 @@
 
 #include <map>
 #include <deque>
+#include <queue>
+#include <chrono>
 #include <iostream>
 #include <functional>
 
@@ -20,6 +22,9 @@ namespace lock_manager {
     using namespace table;
     using namespace data_types;
 
+    using Clock = chrono::high_resolution_clock;
+    using TimePoint = chrono::time_point<Clock>;
+
     struct Permission {
         enum Type : int {
             SHARED, 
@@ -29,18 +34,16 @@ namespace lock_manager {
         Type type;
         bool granted;
         int  transaction_id;
+        TimePoint time_point;
     };
 
     class PermissionDeque : public deque<Permission> {
-    public:
-
+    private:
         enum LockState {
             NORMAL,
             ISHARED,
             IEXCLUSIVE,
         };
-
-    private:
 
         LockState     state;
         set<EntityID> lock_by;
@@ -148,7 +151,8 @@ namespace lock_manager {
             deque.push_back(Permission {
                 .type = Permission::SHARED,
                 .granted = grant_value,
-                .transaction_id = transaction_id
+                .transaction_id = transaction_id,
+                .time_point = TimePoint()
             });
 
             lock_parent(parent, EntityType::TABLE, id);
@@ -180,7 +184,7 @@ namespace lock_manager {
             };
 
             // Check if our deque is locked 
-            grant_value = grant_value && !deque.is_exclusive_locked();
+            grant_value = grant_value && !(deque.is_exclusive_locked() || deque.is_shared_locked());
             grant_value = grant_value && !deque.front().type == Permission::EXCLUSIVE;
             grant_value = grant_value && (deque.back().type == Permission::SHARED && deque.back().granted);
 
@@ -189,7 +193,8 @@ namespace lock_manager {
             deque.push_back(Permission {
                 .type = Permission::SHARED,
                 .granted = grant_value,
-                .transaction_id = transaction_id
+                .transaction_id = transaction_id,
+                .time_point = TimePoint()
             });
 
             lock_parent(EntityID(1U), EntityType::DATABASE, id);
@@ -227,7 +232,8 @@ namespace lock_manager {
                     deque.push_back(Permission {
                         .type = Permission::SHARED,
                         .granted = grant_value,
-                        .transaction_id = transaction_id
+                        .transaction_id = transaction_id,
+                        .time_point = TimePoint()
                     });
 
                     return grant_value;
@@ -264,8 +270,8 @@ namespace lock_manager {
             };
 
             // Check if our deque is locked 
-            grant_value = grant_value && !deque.front().type == Permission::EXCLUSIVE;
-            grant_value = grant_value && (deque.back().type == Permission::SHARED && deque.back().granted);
+            grant_value = grant_value && !(deque.front().type == Permission::EXCLUSIVE);
+            grant_value = grant_value &&  (deque.back().type == Permission::SHARED && deque.back().granted);
 
             // Check if our parent is locked
             EntityID parent = id_manager.parent_of(id);
@@ -275,7 +281,8 @@ namespace lock_manager {
             deque.push_back(Permission {
                 .type = Permission::EXCLUSIVE,
                 .granted = grant_value,
-                .transaction_id = transaction_id
+                .transaction_id = transaction_id,
+                .time_point = TimePoint()
             });
 
             lock_parent(parent, EntityType::TABLE, id);
@@ -284,9 +291,47 @@ namespace lock_manager {
         }
 
         bool grant_exclusive_table(EntityID id, int transaction_id) {
+            EntityIDManagerInstance id_manager = EntityIDManager::get_instance();
+
+            PermissionDeque& deque = get_deque(id, EntityType::TABLE);
+            bool grant_value = true;
+
+            auto check_parent = [&grant_value, this](auto id, auto type) {
+                PermissionDeque& deque = this->get_deque(id, type);
+                
+                grant_value = grant_value && !(deque.is_exclusive_locked() || deque.is_shared_locked());
+                grant_value = grant_value && !(deque.front().type == Permission::EXCLUSIVE);
+
+                if (deque.is_normal())
+                    grant_value = grant_value && !(deque.back().type == Permission::SHARED && deque.back().granted);
+            };
+
+            auto lock_parent = [this](auto id, auto type, auto lock_id) {
+                PermissionDeque& deque = this->get_deque(id, type);
+
+                deque.lock_exclusive();
+                deque.insert_lock(lock_id);
+            };
+
+            grant_value = grant_value && !(deque.is_exclusive_locked() || deque.is_shared_locked());
+            grant_value = grant_value && !(deque.front().type == Permission::EXCLUSIVE);
+            grant_value = grant_value && !(deque.back().type == Permission::SHARED && deque.back().granted);
+            grant_value = grant_value && !deque.empty();
+
+            check_parent(EntityID(1U), EntityType::DATABASE); // check if database is locked
+
+            deque.push_back(Permission {
+                .type = Permission::EXCLUSIVE,
+                .granted = grant_value,
+                .transaction_id = transaction_id,
+                .time_point = TimePoint()
+            });
+
+            lock_parent(EntityID(1U), EntityType::DATABASE, id);
+            return grant_value;
         }
 
-    public:
+   public:
 
         bool grant_exclusive(EntityID id, int transaction_id) {
             EntityIDManagerInstance id_manager = EntityIDManager::get_instance();       
@@ -318,7 +363,8 @@ namespace lock_manager {
                     deque.push_back(Permission{
                         .type = Permission::EXCLUSIVE,
                         .granted = grant_value,
-                        .transaction_id = transaction_id
+                        .transaction_id = transaction_id,
+                        .time_point = TimePoint()
                     });
 
                     return grant_value;
@@ -329,21 +375,121 @@ namespace lock_manager {
             }
         }
 
-        // return value shows success or failure
-        bool pop_permission(EntityID id, int transaction_id) {
-            PermissionDeque& deque = m_vars[id];
+   private:
 
-            // pop the first permission found in the deque of the 
-            // record in use and same transaction id
-            for (auto it = deque.begin(); it != deque.end(); ++it) {
-                if (it->transaction_id == transaction_id) {
-                    deque.erase(it);
-                    update_permissions(id);
-                    return true;
+        struct TimePriority {
+            EntityID  id;
+            TimePoint time_point;
+
+            bool operator<(const TimePriority& other) const {
+                return time_point < other.time_point;
+            }
+        };
+
+        void update_permissions() {
+            EntityIDManagerInstance id_manager = EntityIDManager::get_instance();
+            priority_queue<TimePriority> pqueue;
+
+            TimePriority tmp_time_priority;
+            Permission   tmp_permission;
+
+            // First check that there isn't an implicit exclusive lock on 
+            // the database
+            if (db_pdeque.is_exclusive_locked() || (db_pdeque.front().granted && db_pdeque.front().type == Permission::EXCLUSIVE))
+                return;
+
+            // Now lets push to a priority queue all permissions that aren't granted 
+            // yet, but under certain conditions
+            for (auto& [table_id, table_val]: table_map) {
+                auto& tmp_table_deque = get<0>(table_val);
+                auto& tmp_basic_map   = get<1>(table_val);
+
+                // If our table has an implicit exclusive lock 
+                // skip it because we can't do anything on that table
+                if (tmp_table_deque.is_exclusive_locked() || (tmp_table_deque.front().granted && tmp_table_deque.front().type == Permission::EXCLUSIVE))
+                    continue;
+
+                // But if our table isn't locked we can push 
+                if (tmp_table_deque.is_normal() || (tmp_table_deque.front().type == Permission::SHARED)) {
+                    pqueue.push(TimePriority {
+                        .id = table_id,
+                        .time_point = tmp_table_deque.front().time_point
+                    });
+                }
+
+                // If it isn't implicitly exclusive locked,
+                // then it isn't locked or has an implicit shared lock
+                for (auto& [basic_id, tmp_basic_deque]: tmp_basic_map) {
+
+                    // If some record/field has a granted permission
+                    // then we skip it
+                    if (tmp_basic_deque.front().granted && tmp_basic_deque.front().type == Permission::EXCLUSIVE)
+                        continue;
+
+                    if (tmp_table_deque.is_normal() || (tmp_basic_deque.front().type == Permission::SHARED)) {
+                        pqueue.push(TimePriority {
+                            .id = basic_id,
+                            .time_point = tmp_basic_deque.front().time_point
+                        });
+                    }
                 }
             }
+        }
 
-            return false;
+        bool revoke_permission_basic(EntityID id, EntityType type) {
+            EntityIDManagerInstance id_manager = EntityIDManager::get_instance();
+            PermissionDeque& deque = get_deque(id, type);
+            EntityID parent = id_manager.parent_of(id);
+
+            if (deque.empty()) return false;
+
+            auto& [_, val] = *get_table(parent);
+            auto& table_deque = get<1>(val);
+
+            table_deque.remove_lock(id);
+            db_pdeque.remove_lock(parent);
+            
+            deque.pop_front();
+            return true;
+        }
+
+        bool revoke_permission_table(EntityID id) {
+            PermissionDeque& deque = get_deque(id, EntityType::TABLE);
+
+            if (deque.empty()) return false;
+
+            db_pdeque.remove_lock(id);
+
+            deque.pop_front();
+
+            return true;
+        }
+
+   public:
+
+        bool revoke_permission(EntityID id) {
+            EntityIDManagerInstance id_manager = EntityIDManager::get_instance();
+            EntityType type = id_manager.type_of(id);
+
+            switch (type) {
+                case EntityType::FIELD: {
+                    return revoke_permission_basic(id, EntityType::FIELD);
+                }
+
+                case EntityType::RECORD: {
+                    return revoke_permission_basic(id, EntityType::FIELD);
+                }
+
+                case EntityType::TABLE: {
+                    return revoke_permission_table(id);
+                }
+
+                case EntityType::DATABASE: {
+                }
+
+                case EntityType::UNKNOWN:
+                    throw runtime_error("This Entity needs to have a type");
+            }
         }
 
     private:
@@ -365,12 +511,12 @@ namespace lock_manager {
             switch (type) {
                 case EntityType::FIELD:
                 case EntityType::RECORD: {
-                    PermissionDeque& deque = find_basic(id)->second;
+                    PermissionDeque& deque = get_basic(id)->second;
                     return deque;
                 }
 
                 case EntityType::TABLE: {
-                    PermissionDeque& deque = get<0>(find_table(id)->second);
+                    PermissionDeque& deque = get<0>(get_table(id)->second);
                     return deque;
                 }
 
@@ -380,32 +526,6 @@ namespace lock_manager {
 
                 default:
                     throw runtime_error("This Entity needs to have a type");
-            }
-        }
-
-        void update_permissions(EntityID id) {
-            PermissionDeque& deque = m_vars[id];
-            // if the deque is empty, early return
-            // if the top permission in the deque is granted
-            // then it should be either a chain of contiguous shared 
-            // permissions or an unique exclusive permission, in that
-            // case early return
-            if (deque.empty() || deque[0].granted) return;
-
-            // now grant the top permission in the deque 
-            deque[0].granted = true;
-            // iterate over the deque, searching if there is an
-            // exclusive permission, there are two cases:
-            // the top permission is shared and we already granted it, 
-            // if the contiguous permissions are also shared we can 
-            // grant them until we find an exclusive permission that breaks
-            // the chain, otherwise if the top permission we granted is 
-            // exclusive, when we start iterating we would enter the 'if' and
-            // break the 'for'
-            for (auto& permission : deque) {
-                if (permission.type == Permission::EXCLUSIVE)
-                    return;
-                permission.granted = true;
             }
         }
     };
